@@ -1,0 +1,31 @@
+{
+  "data_source": "code",
+  "ability": "coding",
+  "prompt": [
+    {
+      "role": "system",
+      "content": "You are a helpful programming assistant. The user will ask you a question and you as the assistant solve it. The assistant first thinks how to solve the task through reasoning and then provides the user with the final answer. The reasoning process and answer are enclosed within <think>...</think> and <answer>...</answer> tags, respectively."
+    },
+    {
+      "role": "user",
+      "content": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\nYou can return the answer in any order.\n \nPlease complete the following python code precisely:\n```python\nclass Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n```"
+    }
+  ],
+  "reward_model": {
+    "style": "rule",
+    "ground_truth": "{\"functional\":\"def _valid(nums, target, answer):\\n    return (isinstance(answer, list) and len(answer) == 2 and\\n            all(type(i) is int and 0 <= i < len(nums) for i in answer) and\\n            answer[0] != answer[1] and nums[answer[0]] + nums[answer[1]] == target)\\n\\ndef check(candidate):\\n    assert _valid([2, 7, 11, 15], 9, candidate(nums=[2, 7, 11, 15], target=9)), 'two-sum-seed-1'\\n    assert _valid([3, 2, 4], 6, candidate(nums=[3, 2, 4], target=6)), 'two-sum-seed-2'\\n    assert _valid([3, 3], 6, candidate(nums=[3, 3], target=6)), 'two-sum-seed-3'\\n\\ncheck(Solution().twoSum)\\n\"}"
+  },
+  "extra_info": {
+    "task_id": "two-sum",
+    "entry_point": "Solution().twoSum",
+    "index": 555,
+    "prompt": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\nYou can return the answer in any order.\n \nPlease complete the following python code precisely:\n```python\nclass Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n```",
+    "reference": "class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        m = {}\n        for i, x in enumerate(nums):\n            y = target - x\n            if y in m:\n                return [m[y], i]\n            m[x] = i\n",
+    "dataset": "LeetCodeDataset",
+    "split": "diagnostic",
+    "test_version": "two-sum-semantic-diagnostic-v1",
+    "train_ready": false,
+    "source_line_1_based": 556,
+    "raw_record_sha256": "f612ed178b40e66280fd3df3000ba317a02ef9fb9f360e2d78465002f2b4e240"
+  }
+}

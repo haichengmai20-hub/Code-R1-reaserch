@@ -1,0 +1,30 @@
+{
+  "layers": {
+    "record-01": [
+      "Task"
+    ],
+    "record-02": [
+      "GT"
+    ],
+    "record-03": [
+      "GT",
+      "Evaluation"
+    ],
+    "record-04": [
+      "Verifier"
+    ],
+    "record-05": [
+      "none"
+    ],
+    "record-06": [
+      "none"
+    ],
+    "record-07": [
+      "Tests"
+    ],
+    "record-08": [
+      "Evaluation"
+    ]
+  },
+  "why": "Author generated classifier oracle for tool validation only."
+}

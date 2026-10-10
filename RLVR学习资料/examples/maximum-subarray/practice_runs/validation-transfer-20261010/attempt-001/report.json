@@ -1,0 +1,67 @@
+{
+  "prediction_matches": true,
+  "results": {
+    "A": {
+      "legacy_pass": true,
+      "semantic_pass": true,
+      "actual": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "legacy_reward": 1.1,
+      "semantic_reward": 1.1
+    },
+    "B": {
+      "legacy_pass": false,
+      "semantic_pass": true,
+      "actual": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "legacy_reward": 0.1,
+      "semantic_reward": 1.1
+    },
+    "C": {
+      "legacy_pass": false,
+      "semantic_pass": false,
+      "actual": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "legacy_reward": 0.1,
+      "semantic_reward": 0.1
+    }
+  },
+  "source_line_1_based": 556,
+  "scope": "Two-sum finite seed comparator exercise; not model evaluation."
+}

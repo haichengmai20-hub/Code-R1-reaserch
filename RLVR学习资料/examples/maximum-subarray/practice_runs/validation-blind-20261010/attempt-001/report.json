@@ -1,0 +1,42 @@
+{
+  "per_record_matches": {
+    "record-01": true,
+    "record-02": true,
+    "record-03": true,
+    "record-04": true,
+    "record-05": true,
+    "record-06": true,
+    "record-07": true,
+    "record-08": true
+  },
+  "all_categories_match": true,
+  "diagnosis": {
+    "record-01": [
+      "Evaluation"
+    ],
+    "record-02": [
+      "GT"
+    ],
+    "record-03": [
+      "none"
+    ],
+    "record-04": [
+      "Verifier"
+    ],
+    "record-05": [
+      "GT",
+      "Evaluation"
+    ],
+    "record-06": [
+      "Task"
+    ],
+    "record-07": [
+      "Tests"
+    ],
+    "record-08": [
+      "none"
+    ]
+  },
+  "reasoning_requires_human_review": true,
+  "scope": "Constructed offline fault records, no actual infrastructure fault injection."
+}

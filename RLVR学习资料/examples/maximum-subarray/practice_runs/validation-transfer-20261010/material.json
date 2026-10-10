@@ -1,0 +1,84 @@
+{
+  "raw_task": {
+    "task_id": "two-sum",
+    "prompt": "from typing import *\n\nfrom functools import *\nfrom collections import *\nfrom itertools import *\nfrom heapq import *\nfrom bisect import *\nfrom string import *\nfrom operator import *\nfrom math import *\nimport math\nimport datetime\ninf = float('inf')\n",
+    "entry_point": "Solution().twoSum",
+    "test": "def check(candidate):\n    assert candidate(nums = [2,7,11,15], target = 9) == [0,1]\n    assert candidate(nums = [3,2,4], target = 6) == [1,2]\n    assert candidate(nums = [3,3], target = 6) == [0,1]\n",
+    "completion": "class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        m = {}\n        for i, x in enumerate(nums):\n            y = target - x\n            if y in m:\n                return [m[y], i]\n            m[x] = i\n",
+    "examples": [
+      {
+        "input": "nums = [2,7,11,15], target = 9",
+        "output": "[0,1]"
+      },
+      {
+        "input": "nums = [3,2,4], target = 6",
+        "output": "[1,2]"
+      },
+      {
+        "input": "nums = [3,3], target = 6",
+        "output": "[0,1]"
+      }
+    ],
+    "src": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\nYou can return the answer in any order.\n \nPlease complete the following python code precisely:\n```python\nclass Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n```",
+    "meta": {
+      "question_id": 1,
+      "difficulty": "Easy",
+      "lang_code": "class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:",
+      "question_title": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\nYou can return the answer in any order.\n \nExample 1:\n\nInput: nums = [2,7,11,15], target = 9\nOutput: [0,1]\nExplanation: Because nums[0] + nums[1] == 9, we return [0, 1].\n\nExample 2:\n\nInput: nums = [3,2,4], target = 6\nOutput: [1,2]\n\nExample 3:\n\nInput: nums = [3,3], target = 6\nOutput: [0,1]\n\n \nConstraints:\n\n2 <= nums.length <= 104\n-109 <= nums[i] <= 109\n-109 <= target <= 109\nOnly one valid answer exists.\n\n \nFollow-up: Can you come up with an algorithm that is less than O(n2) time complexity?",
+      "query": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\nYou can return the answer in any order.\n \nPlease complete the following python code precisely:\n```python\nclass Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n```",
+      "response": "To solve the problem of finding two indices in an array such that the numbers at those indices add up to a given target, you can use a hash map (dictionary in Python) to keep track of the numbers you have seen so far and their indices. This approach allows you to achieve the solution in a single pass through the array, resulting in a time complexity of O(n).\n\nHere is the complete code:\n\n```python\nfrom typing import List\n\nclass Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        # Create a dictionary to store the numbers and their indices\n        num_to_index = {}\n        \n        # Iterate over the list of numbers\n        for index, num in enumerate(nums):\n            # Calculate the complement that would add up to the target\n            complement = target - num\n            \n            # Check if the complement is already in the dictionary\n            if complement in num_to_index:\n                # If it is, return the indices of the complement and the current number\n                return [num_to_index[complement], index]\n            \n            # Otherwise, add the current number and its index to the dictionary\n            num_to_index[num] = index\n        \n        # If no solution is found, return an empty list (though the problem guarantees one solution)\n        return []\n```\n\n### Explanation:\n- We use a dictionary `num_to_index` to store each number and its index as we iterate through the list.\n- For each number `num` in `nums`, we calculate its complement with respect to the `target` (i.e., `complement = target - num`).\n- We check if this complement is already in the dictionary. If it is, it means we have found the two numbers that add up to the target, and we return their indices.\n- If the complement is not found, we add the current number and its index to the dictionary and continue.\n- The problem guarantees that there is exactly one solution, so the function will always return a valid pair of indices.",
+      "split": "rl"
+    }
+  },
+  "source_line_1_based": 556,
+  "raw_record_sha256": "f612ed178b40e66280fd3df3000ba317a02ef9fb9f360e2d78465002f2b4e240",
+  "tests": [
+    {
+      "input": {
+        "nums": [
+          2,
+          7,
+          11,
+          15
+        ],
+        "target": 9
+      },
+      "expected": [
+        0,
+        1
+      ]
+    },
+    {
+      "input": {
+        "nums": [
+          3,
+          2,
+          4
+        ],
+        "target": 6
+      },
+      "expected": [
+        1,
+        2
+      ]
+    },
+    {
+      "input": {
+        "nums": [
+          3,
+          3
+        ],
+        "target": 6
+      },
+      "expected": [
+        0,
+        1
+      ]
+    }
+  ],
+  "candidate_sources": {
+    "A": "class Solution:\n    def twoSum(self, nums, target):\n        seen = {}\n        for i, value in enumerate(nums):\n            if target-value in seen:\n                return [seen[target-value], i]\n            seen[value] = i\n",
+    "B": "class Solution:\n    def twoSum(self, nums, target):\n        seen = {}\n        for i, value in enumerate(nums):\n            if target-value in seen:\n                return [i, seen[target-value]]\n            seen[value] = i\n",
+    "C": "class Solution:\n    def twoSum(self, nums, target):\n        seen = {}\n        for i, value in enumerate(nums):\n            seen[value] = i\n            if target-value in seen:\n                return [seen[target-value], i]\n            seen[value] = i\n"
+  }
+}

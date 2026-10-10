@@ -1,0 +1,30 @@
+{
+  "layers": {
+    "record-01": [
+      "Evaluation"
+    ],
+    "record-02": [
+      "GT"
+    ],
+    "record-03": [
+      "none"
+    ],
+    "record-04": [
+      "Verifier"
+    ],
+    "record-05": [
+      "GT",
+      "Evaluation"
+    ],
+    "record-06": [
+      "Task"
+    ],
+    "record-07": [
+      "Tests"
+    ],
+    "record-08": [
+      "none"
+    ]
+  },
+  "why": "Author classifier validation, not an independent learner diagnosis."
+}

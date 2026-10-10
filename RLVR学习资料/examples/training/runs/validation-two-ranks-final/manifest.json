@@ -1,0 +1,143 @@
+{
+  "source_revision": "443f8da8058d07051793eff875da117534fd1ba1",
+  "dataset_revision": "f3519e6b7f42265dd4e4d35d4812e8c29b08111a",
+  "provenance": [
+    {
+      "task_id": "climbing-stairs",
+      "file": "LeetCodeDataset-v2-rl-problems.jsonl",
+      "line": 349,
+      "seed_assertions": 2,
+      "split": "train"
+    },
+    {
+      "task_id": "house-robber",
+      "file": "LeetCodeDataset-v2-rl-problems.jsonl",
+      "line": 607,
+      "seed_assertions": 2,
+      "split": "train"
+    },
+    {
+      "task_id": "single-number",
+      "file": "LeetCodeDataset-v2-sft-problems.jsonl",
+      "line": 461,
+      "seed_assertions": 3,
+      "split": "train"
+    },
+    {
+      "task_id": "maximum-product-subarray",
+      "file": "LeetCodeDataset-v2-sft-problems.jsonl",
+      "line": 644,
+      "seed_assertions": 2,
+      "split": "train"
+    },
+    {
+      "task_id": "valid-parentheses",
+      "file": "LeetCodeDataset-v2-sft-problems.jsonl",
+      "line": 814,
+      "seed_assertions": 3,
+      "split": "dev"
+    },
+    {
+      "task_id": "longest-substring-without-repeating-characters",
+      "file": "LeetCodeDataset-v2-rl-problems.jsonl",
+      "line": 359,
+      "seed_assertions": 3,
+      "split": "dev"
+    }
+  ],
+  "exact_task_overlap": [],
+  "diagnostic_ids_excluded": [
+    "maximum-subarray",
+    "two-sum"
+  ],
+  "status": "prepared_not_admitted",
+  "uses_public_examples": true,
+  "prompt_adaptation": "Use full original statement, including public examples and constraints, plus source signature; not original coder1 meta.query-only preprocessing.",
+  "remaining_gates": [
+    "Per-task expected/contract and full-statement notation review",
+    "Semantic-family and experiment split review; distinct IDs alone do not prove independence",
+    "Target Linux backend isolation, completion, timeout and cleanup checks",
+    "Runtime dependency/model/config check and baseline before update"
+  ],
+  "scope": "Tiny train/dev smoke selection. No final blind benchmark or effect claim; no model execution.",
+  "batch_contract": {
+    "query_rows": 4,
+    "candidates_per_query": 4,
+    "global_response_rows": 16,
+    "world_size": 2,
+    "local_response_rows": 8,
+    "input_mini_batch": 4,
+    "local_mini_batch": 8,
+    "micro_batch_per_gpu": 2,
+    "gradient_accumulation": 4,
+    "rollout_tp": 1,
+    "sp": 1,
+    "scope": "Static arithmetic for this source revision, ordinary 1-D FSDP and fixed micro batches."
+  },
+  "documented_single_rank_recipe_check": {
+    "original_validate_config_passed": true,
+    "source_file_sha256": "c6cd5de7cc725351f65746ac772e978dae4eb7889cd87b867081771aa09787b6",
+    "selected_overrides": {
+      "algorithm.adv_estimator": "grpo",
+      "data.train_files": "$LEARN_POOL_DIR/train.parquet",
+      "data.val_files": "$LEARN_POOL_DIR/dev.parquet",
+      "data.train_batch_size": "4",
+      "data.max_prompt_length": "1024",
+      "data.max_response_length": "1024",
+      "actor_rollout_ref.model.path": "$LEARN_MODEL_PATH",
+      "actor_rollout_ref.rollout.name": "vllm",
+      "actor_rollout_ref.rollout.n": "4",
+      "actor_rollout_ref.rollout.tensor_model_parallel_size": "1",
+      "actor_rollout_ref.rollout.temperature": "1.0",
+      "actor_rollout_ref.rollout.top_p": "1.0",
+      "actor_rollout_ref.rollout.gpu_memory_utilization": "0.5",
+      "actor_rollout_ref.actor.ppo_mini_batch_size": "4",
+      "actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu": "2",
+      "actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu": "2",
+      "actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu": "2",
+      "actor_rollout_ref.actor.optim.lr": "5e-7",
+      "actor_rollout_ref.actor.use_kl_loss": "True",
+      "actor_rollout_ref.actor.kl_loss_coef": "0.001",
+      "actor_rollout_ref.actor.kl_loss_type": "low_var_kl",
+      "actor_rollout_ref.model.enable_gradient_checkpointing": "True",
+      "trainer.nnodes": "1",
+      "trainer.n_gpus_per_node": "1",
+      "trainer.total_epochs": "${LEARN_EPOCHS:-1}",
+      "trainer.total_training_steps": "${LEARN_TOTAL_STEPS:-1}",
+      "trainer.resume_mode": "${LEARN_RESUME_MODE:-disable}",
+      "trainer.resume_from_path": "False",
+      "trainer.save_freq": "1",
+      "trainer.test_freq": "1",
+      "trainer.logger": "[console]",
+      "trainer.default_local_dir": "$LEARN_RUN_DIR",
+      "reward_model.reward_manager": "prime"
+    },
+    "batch_contract": {
+      "query_rows": 4,
+      "candidates_per_query": 4,
+      "global_response_rows": 16,
+      "world_size": 1,
+      "local_response_rows": 16,
+      "input_mini_batch": 4,
+      "local_mini_batch": 16,
+      "micro_batch_per_gpu": 2,
+      "gradient_accumulation": 8,
+      "rollout_tp": 1,
+      "sp": 1,
+      "scope": "Static arithmetic for this source revision, ordinary 1-D FSDP and fixed micro batches."
+    },
+    "scope": "Original pure _validate_config method executed on the documented fixed-role scalar configuration. No Hydra/model/CUDA/worker initialization."
+  },
+  "current_host": {
+    "platform": "Windows",
+    "python": "3.14.6",
+    "nvidia_smi_command_present": true,
+    "packages": {
+      "torch": false,
+      "pyarrow": false,
+      "datasets": false,
+      "numpy": false
+    }
+  },
+  "parquet_exported": false
+}

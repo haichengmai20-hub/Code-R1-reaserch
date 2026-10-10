@@ -1,0 +1,12 @@
+{
+  "counts": {
+    "accepted": 9,
+    "quarantined": 1,
+    "pending": 0
+  },
+  "data_prediction_matches": true,
+  "input_sha256": "fdc8adfb425a4ae2570b7e901ce0c3737190a0dd20f90fd65ecb95321ef3b7fb",
+  "stage": "check",
+  "scope": "Student data changes / reviewed fixed programs; no model or general secure executor.",
+  "test_version": "learner-10d24188c8cd"
+}

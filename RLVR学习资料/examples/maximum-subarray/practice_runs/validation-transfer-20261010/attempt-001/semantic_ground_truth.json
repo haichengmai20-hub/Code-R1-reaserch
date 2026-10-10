@@ -1,0 +1,3 @@
+{
+  "functional": "def _valid(nums, target, answer):\n    return (isinstance(answer, list) and len(answer) == 2 and\n            all(type(i) is int and 0 <= i < len(nums) for i in answer) and\n            answer[0] != answer[1] and nums[answer[0]] + nums[answer[1]] == target)\n\ndef check(candidate):\n    assert _valid([2, 7, 11, 15], 9, candidate(nums=[2, 7, 11, 15], target=9)), 'two-sum-seed-1'\n    assert _valid([3, 2, 4], 6, candidate(nums=[3, 2, 4], target=6)), 'two-sum-seed-2'\n    assert _valid([3, 3], 6, candidate(nums=[3, 3], target=6)), 'two-sum-seed-3'\n\ncheck(Solution().twoSum)\n"
+}

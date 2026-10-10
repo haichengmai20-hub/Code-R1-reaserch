@@ -1,0 +1,66 @@
+{
+  "live_markdown_count": 11,
+  "local_links_checked": 360,
+  "errors": [],
+  "math_expression_count": 24,
+  "stage_assignment_counts": {
+    "01_数据理解与GT构建.md": 3,
+    "02_Verifier与任务池验收.md": 3,
+    "03_Rollout与GRPO机制.md": 3,
+    "04_真实训练与独立评测.md": 3
+  },
+  "original_source_and_dataset_hash_matches": {
+    "LeetCodeDataset/data/LeetCodeDataset-v2-rl-problems.jsonl": true,
+    "verl/utils/reward_score/coder1/__init__.py": true,
+    "examples/data_preprocess/coder1.py": true,
+    "verl/trainer/ppo/core_algos.py": true
+  },
+  "scope": "UTF8/no-BOM, links/explicit anchors/fences, Python syntax, current source hashes; not browser rendering or model training.",
+  "history_original_bytes_match": {
+    "audit.py": true,
+    "audit.json": true,
+    "original.md": true,
+    "validation.json": true
+  },
+  "current_course_sha256": {
+    "01_数据理解与GT构建.md": "1d479f0bd82ac8ebd81731ae0241c28d745f413c2eb9b341e8d1ee8758a24dba",
+    "02_Verifier与任务池验收.md": "5bedc62a4e6ba777234b9891d7ef6a185b7b99592d0687d41608ad5b1521c85f",
+    "03_Rollout与GRPO机制.md": "5efb2c8ad1d10d1b38af976db4b14f8c9462539b60cfd148f20d14a7615348b2",
+    "04_真实训练与独立评测.md": "b27270adef62192a55fd07f04ead7cc6743980e8afe7f683f4fd88fd3888fa0c",
+    "README.md": "5027a2a58e018f65e562b53c7160a9b59b62b4caad1d36fae82805ff3cb8b99a",
+    "RLVR工业流程.md": "1a7ff8ac9fc0b578cfb1529380b69e721abe6b6fdd5704908b906b9dd196abb4"
+  },
+  "katex_expressions_parsed": 24,
+  "katex_errors": 0,
+  "learning_complete_by_author_tool_tests": false,
+  "human_assessment_required": "Student own cases/diagnoses/transfer/gradient variant and notes, judged by the course rubric.",
+  "completion_requirements": {
+    "four_stages_and_framework_preserved": true,
+    "three_assignments_per_stage": true,
+    "student_data_to_GT_actual_entry": true,
+    "cross_task_semantic_GT_exercise": true,
+    "blind_prediction_and_material_binding": true,
+    "gradient_and_mask_lab": true,
+    "training_pool_and_original_config_guard": true,
+    "source_grounded_interview_depth": true,
+    "integrated_graduation_rubric": true
+  },
+  "new_asset_sha256": {
+    "examples\\maximum-subarray\\practice.py": "7dee8d15e30b7cd7b20919d99b5a119b35d6a01f76007d3702a272043e8487d3",
+    "examples\\maximum-subarray\\mechanism_lab.py": "45c27a8c8b7aa5280c2ba802808dc4d4d537eefb519b33424f4ebca13ad7765d",
+    "examples\\maximum-subarray\\EXERCISES.md": "4065f9cb1f8f9bcb146472919aa58a395b0ac734c43b1b0085b8258812fce98d",
+    "examples\\maximum-subarray\\ANSWERS.md": "561466dee513fd803a7b28b501af2babe5204c90b0a3d7bd0d0c1c0f9646e45a",
+    "examples\\training\\prepare_training.py": "671666270326faf020be1b7410c44d68f7814eb1c10fd270db5534f4d30764f8",
+    "examples\\training\\README.md": "62452fca6c96bef2d0a3f296a828b0dc5b31ab885cb0e00724ee40f196896368"
+  },
+  "verified_scope": {
+    "CPU_behavior_tests": 25,
+    "author_CLI_success_and_expected_rejection_checks": 24,
+    "additional_final_CLI_rechecks": 9,
+    "fixed_original_demo": "8 accepted / 7 isolated; 780 small-domain comparisons; original scorer reused",
+    "original_source_config_guard": "executed with documented scalar configuration; old/new micro conflict rejected",
+    "real_LLM_or_GPU_training": "not executed; separate resource-dependent acceptance path documented",
+    "Parquet_export": "not executed without pyarrow; missing-dependency refusal and retained manifest verified",
+    "learner_mastery": "not claimed; own work and manual rubric required"
+  }
+}

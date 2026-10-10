@@ -1,0 +1,69 @@
+{
+  "counts": {
+    "accepted": 3,
+    "quarantined": 0,
+    "pending": 0
+  },
+  "data_prediction_matches": true,
+  "input_sha256": "7644ccc5e6961c2c1d95dccfe269a4e7ff2b5a0b90416abb4365bbb80bcb0f90",
+  "stage": "score",
+  "scope": "Student data changes / reviewed fixed programs; no model or general secure executor.",
+  "test_version": "learner-45071c504759",
+  "candidates": [
+    {
+      "candidate_id": "reference",
+      "reward": -1.1,
+      "source_log": "----------------Bad format detected!----------------\n----------------Original Model Output----------------\n```python\nfrom typing import List\nclass Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n        ans = f = nums[0]\n        for x in nums[1:]:\n            f = max(f, 0) + x\n            ans = max(ans, f)\n        return ans\n```",
+      "audit_completed_case_count": 0,
+      "correctness_pass": false,
+      "observations": []
+    },
+    {
+      "candidate_id": "correct_prefix",
+      "reward": -1.1,
+      "source_log": "----------------Bad format detected!----------------\n----------------Original Model Output----------------\n```python\nclass Solution:\n    def maxSubArray(self, nums):\n        prefix = lowest = 0\n        best = nums[0]\n        for value in nums:\n            prefix += value\n            best = max(best, prefix - lowest)\n            lowest = min(lowest, prefix)\n        return best\n```",
+      "audit_completed_case_count": 0,
+      "correctness_pass": false,
+      "observations": []
+    },
+    {
+      "candidate_id": "wrong_empty",
+      "reward": -1.1,
+      "source_log": "----------------Bad format detected!----------------\n----------------Original Model Output----------------\n```python\nclass Solution:\n    def maxSubArray(self, nums):\n        ending = best = 0\n        for value in nums:\n            ending = max(0, ending + value)\n            best = max(best, ending)\n        return best\n```",
+      "audit_completed_case_count": 0,
+      "correctness_pass": false,
+      "observations": []
+    },
+    {
+      "candidate_id": "wrong_sum",
+      "reward": -1.1,
+      "source_log": "----------------Bad format detected!----------------\n----------------Original Model Output----------------\n```python\nclass Solution:\n    def maxSubArray(self, nums):\n        return sum(nums)\n```",
+      "audit_completed_case_count": 0,
+      "correctness_pass": false,
+      "observations": []
+    },
+    {
+      "candidate_id": "bad_format",
+      "reward": -1.1,
+      "source_log": "----------------Bad format detected!----------------\n----------------Original Model Output----------------\n```python\nfrom typing import List\nclass Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n        ans = f = nums[0]\n        for x in nums[1:]:\n            f = max(f, 0) + x\n            ans = max(ans, f)\n        return ans\n```",
+      "audit_completed_case_count": 0,
+      "correctness_pass": false,
+      "observations": []
+    },
+    {
+      "candidate_id": "early_exit",
+      "reward": -1.1,
+      "source_log": "----------------Bad format detected!----------------\n----------------Original Model Output----------------\n```python\nimport sys\nsys.exit(0)\n```",
+      "audit_completed_case_count": 0,
+      "correctness_pass": false,
+      "observations": []
+    }
+  ],
+  "reward_prediction_matches": true,
+  "teaching_advantages": [
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ]
+}

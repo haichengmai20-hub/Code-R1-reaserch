@@ -1,0 +1,192 @@
+{
+  "data_source": "code",
+  "ability": "coding",
+  "prompt": [
+    {
+      "role": "system",
+      "content": "You are a helpful programming assistant. The user will ask you a question and you as the assistant solve it. The assistant first thinks how to solve the task through reasoning and then provides the user with the final answer. The reasoning process and answer are enclosed within <think>...</think> and <answer>...</answer> tags, respectively."
+    },
+    {
+      "role": "user",
+      "content": "Given an integer array nums, find the subarray with the largest sum, and return its sum.\n \nPlease complete the following python code precisely:\n```python\nclass Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n```\n\nExplicit task constraints and return contract:\n- nums is a non-empty List[int].\n- 1 <= len(nums) <= 100000.\n- For every element x in nums, -10000 <= x <= 10000.\n- Return an int: the maximum sum of a non-empty contiguous subarray of nums.\n- Empty subarrays are not allowed."
+    }
+  ],
+  "reward_model": {
+    "style": "rule",
+    "ground_truth": "{\"functional\":\"def check(candidate):\\n    assert candidate(nums=[-2, 1, -3, 4, -1, 2, 1, -5, 4]) == 6, 'seed-1'\\n    assert candidate(nums=[1]) == 1, 'seed-2'\\n    assert candidate(nums=[5, 4, -1, 7, 8]) == 23, 'seed-3'\\n    assert candidate(nums=[-3, -2, -5]) == -2, 'diag-all-negative'\\n    assert candidate(nums=[2, -5, 3, 4, -1]) == 7, 'diag-restart'\\n    assert candidate(nums=[0, 0]) == 0, 'diag-zero'\\n    assert candidate(nums=[-7]) == -7, 'diag-single-negative'\\n    assert candidate(nums=[10000, -10000, 10000]) == 10000, 'diag-boundary'\\n    assert candidate(nums=[-2, 4, -1]) == 4, 'author-ninth'\\n\\ncheck(Solution().maxSubArray)\\n\"}"
+  },
+  "extra_info": {
+    "task_id": "maximum-subarray",
+    "entry_point": "Solution().maxSubArray",
+    "index": 142,
+    "prompt": "Given an integer array nums, find the subarray with the largest sum, and return its sum.\n \nPlease complete the following python code precisely:\n```python\nclass Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n```\n\nExplicit task constraints and return contract:\n- nums is a non-empty List[int].\n- 1 <= len(nums) <= 100000.\n- For every element x in nums, -10000 <= x <= 10000.\n- Return an int: the maximum sum of a non-empty contiguous subarray of nums.\n- Empty subarrays are not allowed.",
+    "dataset": "LeetCodeDataset",
+    "reference": "class Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n        ans = f = nums[0]\n        for x in nums[1:]:\n            f = max(f, 0) + x\n            ans = max(ans, f)\n        return ans\n",
+    "original_corpus_split": "rl",
+    "split": "diagnostic",
+    "source": {
+      "dataset_file": "LeetCodeDataset/data/LeetCodeDataset-v2-rl-problems.jsonl",
+      "line_1_based": 143,
+      "code_r1_revision": "443f8da8058d07051793eff875da117534fd1ba1",
+      "dataset_revision": "f3519e6b7f42265dd4e4d35d4812e8c29b08111a",
+      "original_split": "rl",
+      "raw_record_sha256_without_terminator": "cd4ecaa1bf8d73bc9b6b926d6b5c43a58f5eed5386c5a9f95fd0bac9fcf70a79"
+    },
+    "test_version": "learner-10d24188c8cd",
+    "train_ready": false,
+    "case_index": [
+      {
+        "case_id": "seed-1",
+        "input": {
+          "nums": [
+            -2,
+            1,
+            -3,
+            4,
+            -1,
+            2,
+            1,
+            -5,
+            4
+          ]
+        },
+        "expected": 6,
+        "input_sha256": "346be4ae3d8e8a24cd5b9d34d05a3f1ec48751f7a5ef540bea38c0c9997fe013",
+        "origin": {
+          "kind": "original_seed",
+          "dataset_line_1_based": 143,
+          "test_line_1_based": 2,
+          "original_split": "rl"
+        }
+      },
+      {
+        "case_id": "seed-2",
+        "input": {
+          "nums": [
+            1
+          ]
+        },
+        "expected": 1,
+        "input_sha256": "743cc9c241016f921bb01425c09b37d9d1801f2510663f8595a489c7063544b8",
+        "origin": {
+          "kind": "original_seed",
+          "dataset_line_1_based": 143,
+          "test_line_1_based": 3,
+          "original_split": "rl"
+        }
+      },
+      {
+        "case_id": "seed-3",
+        "input": {
+          "nums": [
+            5,
+            4,
+            -1,
+            7,
+            8
+          ]
+        },
+        "expected": 23,
+        "input_sha256": "3237d6c418ee86238c5d72789394d793f1237c244b921bbd3cce2844d2ae7a50",
+        "origin": {
+          "kind": "original_seed",
+          "dataset_line_1_based": 143,
+          "test_line_1_based": 4,
+          "original_split": "rl"
+        }
+      },
+      {
+        "case_id": "diag-all-negative",
+        "input": {
+          "nums": [
+            -3,
+            -2,
+            -5
+          ]
+        },
+        "expected": -2,
+        "input_sha256": "3110ca06e951eca3182b0c9baad536a33739683535e7851478ebf4317aa56b8d",
+        "origin": {
+          "kind": "verified_diagnostic_proposal",
+          "test_version": "maximum-subarray-diagnostic-v1"
+        }
+      },
+      {
+        "case_id": "diag-restart",
+        "input": {
+          "nums": [
+            2,
+            -5,
+            3,
+            4,
+            -1
+          ]
+        },
+        "expected": 7,
+        "input_sha256": "ba6225c68c9b177e23afc6a6642a67c073f193fec75ad56418c8d5cec7a96778",
+        "origin": {
+          "kind": "verified_diagnostic_proposal",
+          "test_version": "maximum-subarray-diagnostic-v1"
+        }
+      },
+      {
+        "case_id": "diag-zero",
+        "input": {
+          "nums": [
+            0,
+            0
+          ]
+        },
+        "expected": 0,
+        "input_sha256": "f89070ac4b7a23ebdf9a6c296680b3b6e564f62051ab7f0ad86448bbf8f498f3",
+        "origin": {
+          "kind": "verified_diagnostic_proposal",
+          "test_version": "maximum-subarray-diagnostic-v1"
+        }
+      },
+      {
+        "case_id": "diag-single-negative",
+        "input": {
+          "nums": [
+            -7
+          ]
+        },
+        "expected": -7,
+        "input_sha256": "7e19c7c0663069b67b48d3c3bdc54b8a33edfe6711b5c903c1836b0d6eb637f5",
+        "origin": {
+          "kind": "verified_diagnostic_proposal",
+          "test_version": "maximum-subarray-diagnostic-v1"
+        }
+      },
+      {
+        "case_id": "diag-boundary",
+        "input": {
+          "nums": [
+            10000,
+            -10000,
+            10000
+          ]
+        },
+        "expected": 10000,
+        "input_sha256": "1e7d3a7edd57f3c386dca530c6f21ba474a2cd100d223d2693ddff585d421a63",
+        "origin": {
+          "kind": "verified_diagnostic_proposal",
+          "test_version": "maximum-subarray-diagnostic-v1"
+        }
+      },
+      {
+        "case_id": "author-ninth",
+        "input": {
+          "nums": [
+            -2,
+            4,
+            -1
+          ]
+        },
+        "expected": 4,
+        "input_sha256": "680b9d4d997868964762e1c179ed6f67ed5894042daf5088ea4a113ffb596d20",
+        "origin": "author validation only; not student mastery"
+      }
+    ]
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "source_revision": "443f8da8058d07051793eff875da117534fd1ba1",
+  "dataset_revision": "f3519e6b7f42265dd4e4d35d4812e8c29b08111a",
+  "provenance": [
+    {
+      "task_id": "climbing-stairs",
+      "file": "LeetCodeDataset-v2-rl-problems.jsonl",
+      "line": 349,
+      "seed_assertions": 2,
+      "split": "train"
+    },
+    {
+      "task_id": "house-robber",
+      "file": "LeetCodeDataset-v2-rl-problems.jsonl",
+      "line": 607,
+      "seed_assertions": 2,
+      "split": "train"
+    },
+    {
+      "task_id": "single-number",
+      "file": "LeetCodeDataset-v2-sft-problems.jsonl",
+      "line": 461,
+      "seed_assertions": 3,
+      "split": "train"
+    },
+    {
+      "task_id": "maximum-product-subarray",
+      "file": "LeetCodeDataset-v2-sft-problems.jsonl",
+      "line": 644,
+      "seed_assertions": 2,
+      "split": "train"
+    },
+    {
+      "task_id": "valid-parentheses",
+      "file": "LeetCodeDataset-v2-sft-problems.jsonl",
+      "line": 814,
+      "seed_assertions": 3,
+      "split": "dev"
+    },
+    {
+      "task_id": "longest-substring-without-repeating-characters",
+      "file": "LeetCodeDataset-v2-rl-problems.jsonl",
+      "line": 359,
+      "seed_assertions": 3,
+      "split": "dev"
+    }
+  ],
+  "exact_task_overlap": [],
+  "diagnostic_ids_excluded": [
+    "maximum-subarray",
+    "two-sum"
+  ],
+  "status": "prepared_not_admitted",
+  "uses_public_examples": true,
+  "prompt_adaptation": "Use full original statement, including public examples and constraints, plus source signature; not original coder1 meta.query-only preprocessing.",
+  "remaining_gates": [
+    "Per-task expected/contract and full-statement notation review",
+    "Semantic-family and experiment split review; distinct IDs alone do not prove independence",
+    "Target Linux backend isolation, completion, timeout and cleanup checks",
+    "Runtime dependency/model/config check and baseline before update"
+  ],
+  "scope": "Tiny train/dev smoke selection. No final blind benchmark or effect claim; no model execution.",
+  "batch_contract": {
+    "query_rows": 4,
+    "candidates_per_query": 4,
+    "global_response_rows": 16,
+    "world_size": 1,
+    "local_response_rows": 16,
+    "input_mini_batch": 4,
+    "local_mini_batch": 16,
+    "micro_batch_per_gpu": 2,
+    "gradient_accumulation": 8,
+    "rollout_tp": 1,
+    "sp": 1,
+    "scope": "Static arithmetic for this source revision, ordinary 1-D FSDP and fixed micro batches."
+  },
+  "current_host": {
+    "platform": "Windows",
+    "python": "3.14.6",
+    "nvidia_smi_command_present": true,
+    "packages": {
+      "torch": false,
+      "pyarrow": false,
+      "datasets": false,
+      "numpy": false
+    }
+  },
+  "parquet_exported": false,
+  "parquet_export_error": "pyarrow absent; no Parquet was written"
+}

@@ -1,0 +1,311 @@
+{
+  "scope": "Author end-to-end validation of learning tools; fixed reviewed programs only, no learner mastery, model or GPU claim.",
+  "CLI_cases": [
+    {
+      "args": [
+        "init",
+        "--run",
+        "validation-data-20261010",
+        "--mode",
+        "expanded"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "check",
+        "--run",
+        "validation-data-20261010"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "score",
+        "--run",
+        "validation-data-20261010"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "score",
+        "--run",
+        "validation-data-20261010"
+      ],
+      "returncode": 1,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "score",
+        "--run",
+        "validation-data-20261010"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "init",
+        "--run",
+        "validation-data-20261010"
+      ],
+      "returncode": 2,
+      "stderr": "Exercise stopped: Run already exists. Choose another --run; existing work is preserved."
+    },
+    {
+      "args": [
+        "transfer-init",
+        "--run",
+        "validation-transfer-20261010"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "transfer-grade",
+        "--run",
+        "validation-transfer-20261010"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "transfer-grade",
+        "--run",
+        "validation-transfer-20261010"
+      ],
+      "returncode": 2,
+      "stderr": "Exercise stopped: Transfer material changed, including numeric types. Keep the pinned task fixed."
+    },
+    {
+      "args": [
+        "blind-init",
+        "--run",
+        "validation-blind-20261010",
+        "--seed",
+        "54"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "blind-grade",
+        "--run",
+        "validation-blind-20261010"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "blind-grade",
+        "--run",
+        "validation-blind-20261010"
+      ],
+      "returncode": 2,
+      "stderr": "Exercise stopped: Blind records changed. Keep the task fixed and submit diagnoses; use a new run for a new seed."
+    },
+    {
+      "args": [
+        "--run",
+        "validation-mechanism-20261010"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "--run",
+        "validation-pool-20261010"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "--run",
+        "validation-two-ranks-20261010",
+        "--world-size",
+        "2",
+        "--q",
+        "4",
+        "--g",
+        "4",
+        "--mini",
+        "4",
+        "--micro",
+        "2",
+        "--tp",
+        "1"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "args": [
+        "--run",
+        "validation-invalid-tp-20261010",
+        "--world-size",
+        "1",
+        "--tp",
+        "2"
+      ],
+      "returncode": 2,
+      "stderr": "Preparation stopped: World size must be divisible by TP and SP."
+    },
+    {
+      "args": [
+        "--run",
+        "validation-no-pyarrow-20261010",
+        "--export-parquet"
+      ],
+      "returncode": 2,
+      "stderr": "Preparation stopped: pyarrow absent. JSONL and a failed-export manifest were retained; install in the target training environment, then use a new run."
+    }
+  ],
+  "CLI_case_count": 17,
+  "parquet_live_export": "not run: dependency absent; failure path verified",
+  "source_revision": "443f8da8058d07051793eff875da117534fd1ba1",
+  "dataset_revision": "f3519e6b7f42265dd4e4d35d4812e8c29b08111a",
+  "final_recheck": [
+    {
+      "args": [
+        "check",
+        "--run",
+        "validation-data-20261010"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "score",
+        "--run",
+        "validation-data-20261010"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "score",
+        "--run",
+        "validation-data-20261010"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "transfer-grade",
+        "--run",
+        "validation-transfer-20261010"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "blind-grade",
+        "--run",
+        "validation-blind-20261010"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "--run",
+        "validation-pool-final"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "--run",
+        "validation-two-ranks-final",
+        "--world-size",
+        "2",
+        "--tp",
+        "1"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "--run",
+        "validation-no-pyarrow-final",
+        "--export-parquet"
+      ],
+      "returncode": 2
+    }
+  ],
+  "behavior_unit_tests": 25,
+  "documented_recipe_original_config_guard": "executed on scalar subset; no Hydra/model/worker initialization",
+  "final_command_variants": [
+    {
+      "args": [
+        "init",
+        "--run",
+        "validation-seed-format-final",
+        "--mode",
+        "seed"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "check",
+        "--run",
+        "validation-seed-format-final"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "score",
+        "--run",
+        "validation-seed-format-final"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "score",
+        "--run",
+        "validation-seed-format-final",
+        "--bad-format"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "blind-init",
+        "--run",
+        "validation-blind-seed53-final",
+        "--seed",
+        "53"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "blind-grade",
+        "--run",
+        "validation-blind-seed53-final"
+      ],
+      "returncode": 1
+    },
+    {
+      "args": [
+        "blind-grade",
+        "--run",
+        "validation-blind-seed53-final"
+      ],
+      "returncode": 0
+    }
+  ]
+}

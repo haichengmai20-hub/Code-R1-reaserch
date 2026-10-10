@@ -1,0 +1,7 @@
+{
+  "accepted": 3,
+  "quarantined": 0,
+  "pending": 0,
+  "wrong_empty_reward": -1.1,
+  "why": "Author format-only contrast with fixed tests and algorithms."
+}

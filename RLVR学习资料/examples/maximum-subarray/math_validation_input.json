@@ -1,0 +1,122 @@
+[
+  {
+    "file": "04_真实训练与独立评测.md",
+    "expression": "\r\n\\widehat{\\mathrm{pass}}@k = 1-\\frac{\\binom{n-c}{k}}{\\binom{n}{k}}.\r\n",
+    "display": true
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\r\nGT_{\\mathrm{operational}}=\\{(x_j,y_j^*)\\}_{j=1}^{M}\r\n",
+    "display": true
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "x_j",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "y_j^*",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "M",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "G",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "r_1,\\ldots,r_G",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\r\nA_i=\\frac{r_i-\\bar r}{\\sigma_r+\\epsilon}\r\n",
+    "display": true
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "T",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "y_t",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\r\n\\ell_t=\\log\\pi_\\theta(y_t\\mid q,y_{<t})=z_{y_t}/T-\\log\\sum_v\\exp(z_v/T).\r\n",
+    "display": true
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\r\nr_t=\\exp(\\ell_t-\\ell_t^{old}),\\qquad\r\nL_t=\\max(-A r_t,-A\\,\\mathrm{clip}(r_t,1-\\epsilon,1+\\epsilon)).\r\n",
+    "display": true
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\\partial L_t/\\partial\\ell_t=-A r_t",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "B",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "G",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "M",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\r\nN_{\\mathrm{test}}=BGM\r\n",
+    "display": true
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\r\n\\widehat{\\mathrm{pass}}@k=1-\\frac{\\binom{n-c}{k}}{\\binom{n}{k}},\\qquad n\\geq k.\r\n",
+    "display": true
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\r\nR_i=\\prod_{j=1}^{M}I(\\operatorname{Pass}_{ij})\r\n",
+    "display": true
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "i",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "M",
+    "display": false
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\r\nR_i=\\frac{1}{M}\\sum_{j=1}^{M}I(\\operatorname{Pass}_{ij})\r\n",
+    "display": true
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\r\nGT_{\\mathrm{operational}}=\\{(x_j,y_j^*)\\}_{j=1}^{M}\r\n",
+    "display": true
+  },
+  {
+    "file": "RLVR工业流程.md",
+    "expression": "\r\n\\operatorname{Pass}(\\text{Test Suite})\r\n\\not\\Rightarrow\r\n\\text{Universal Correctness}\r\n",
+    "display": true
+  }
+]

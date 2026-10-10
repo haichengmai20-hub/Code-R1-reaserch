@@ -1,0 +1,132 @@
+{
+  "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "datasets": {
+    "LeetCodeDataset-v1-test-problems.jsonl": {
+      "rows": 175,
+      "selected_ids": [
+        "find-the-longest-equal-subarray",
+        "count-zero-request-servers",
+        "relocate-marbles",
+        "sum-of-matrix-after-queries",
+        "maximum-sum-queries"
+      ]
+    },
+    "LeetCodeDataset-v1-train-problems.jsonl": {
+      "rows": 1570,
+      "selected_ids": []
+    },
+    "LeetCodeDataset-v2-rl-problems.jsonl": {
+      "rows": 945,
+      "selected_ids": [
+        "relocate-marbles",
+        "maximum-sum-queries",
+        "count-zero-request-servers"
+      ]
+    },
+    "LeetCodeDataset-v2-sft-problems.jsonl": {
+      "rows": 945,
+      "selected_ids": [
+        "find-the-longest-equal-subarray",
+        "sum-of-matrix-after-queries"
+      ]
+    },
+    "LeetCodeDataset-v2-test-problems.jsonl": {
+      "rows": 200,
+      "selected_ids": []
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "find-the-longest-equal-subarray",
+      "question_id": 2832,
+      "split": "test",
+      "asserts": 2,
+      "query_has_constraints_heading": false,
+      "reference_seed_tests": "pass",
+      "without_prelude": "NameError: name 'Counter' is not defined",
+      "stored_response_seed_tests": "pass"
+    },
+    {
+      "task_id": "count-zero-request-servers",
+      "question_id": 2833,
+      "split": "test",
+      "asserts": 2,
+      "query_has_constraints_heading": false,
+      "reference_seed_tests": "pass",
+      "without_prelude": "NameError: name 'Counter' is not defined",
+      "stored_response_seed_tests": "pass"
+    },
+    {
+      "task_id": "relocate-marbles",
+      "question_id": 2834,
+      "split": "test",
+      "asserts": 2,
+      "query_has_constraints_heading": false,
+      "reference_seed_tests": "pass",
+      "without_prelude": "pass on this Python version",
+      "stored_response_seed_tests": "pass"
+    },
+    {
+      "task_id": "sum-of-matrix-after-queries",
+      "question_id": 2838,
+      "split": "test",
+      "asserts": 2,
+      "query_has_constraints_heading": false,
+      "reference_seed_tests": "pass",
+      "without_prelude": "pass on this Python version",
+      "stored_response_seed_tests": "pass"
+    },
+    {
+      "task_id": "maximum-sum-queries",
+      "question_id": 2839,
+      "split": "test",
+      "asserts": 3,
+      "query_has_constraints_heading": false,
+      "reference_seed_tests": "pass",
+      "without_prelude": "NameError: name 'bisect_left' is not defined",
+      "stored_response_seed_tests": "not executed: sortedcontainers dependency not installed for this audit"
+    }
+  ],
+  "differential_checks": {
+    "longest_exhaustive": 7088,
+    "find-the-longest-equal-subarray_random": 200,
+    "count-zero-request-servers_random": 200,
+    "relocate-marbles_random": 200,
+    "sum-of-matrix-after-queries_random": 200,
+    "maximum-sum-queries_random": 200
+  },
+  "reward_probes": {
+    "bad_format": -1.1,
+    "correct": 1.1,
+    "wrong_answer": 0.1,
+    "early_exit": 1.1
+  },
+  "protected_hashes": {
+    "LeetCodeDataset\\data\\LeetCodeDataset-v1-test-problems.jsonl": "20b199f7d5ed024604523a2baff32a7935d06a5fc8cf6a68e9bf0ccfeb209b53",
+    "LeetCodeDataset\\data\\LeetCodeDataset-v1-train-problems.jsonl": "f04df38fad8490b408bc069ab8e3397c85715ee0f2a8f0b7aa364413525ad022",
+    "LeetCodeDataset\\data\\LeetCodeDataset-v2-rl-problems.jsonl": "7dce0f64abe4623002e73c29001541d0e2012ca627f5ddd596d5de5eb0144412",
+    "LeetCodeDataset\\data\\LeetCodeDataset-v2-sft-problems.jsonl": "c82d95f515ce2da6dbee913348540350af8c6cfff2cc3cd23c41830cb914e37c",
+    "LeetCodeDataset\\data\\LeetCodeDataset-v2-test-problems.jsonl": "adddd0e8bb46c6fb0ff238e8a48db91224a814aea8085adea502b8dc9e5cb5bc"
+  },
+  "original_doc_hash": "c8de0848a60209f049f034f9b4732699d1cc9c90957a09f9471a3ab8f6c6bef9",
+  "servers_boundary": {
+    "expected": [
+      1,
+      2
+    ],
+    "actual": [
+      1,
+      2
+    ]
+  },
+  "tuple_bug_probe": {
+    "expected": [
+      101
+    ],
+    "stored_expression_result": [
+      21
+    ],
+    "scope": "reproduced expression semantics; not full SortedList program execution"
+  },
+  "reward_probe_scope": "Exact source parser/_compute_score, local subprocess exit-code contract; no Firejail/Docker/backend audit"
+}

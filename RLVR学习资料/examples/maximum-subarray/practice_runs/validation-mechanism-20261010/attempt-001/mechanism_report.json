@@ -1,0 +1,116 @@
+{
+  "scope": "Analytic differentiation + central finite difference + actual toy SGD of two scalar logits. No torch/model/tokenizer/Code-R1 optimizer execution.",
+  "source_mapping": {
+    "forward": "dp_actor.py::_forward_micro_batch",
+    "policy_loss": "core_algos.py::compute_policy_loss",
+    "autograd": "dp_actor.py::update_policy loss.backward; this lab uses an analytic derivative instead"
+  },
+  "one_token": {
+    "probabilities": [
+      0.25,
+      0.75
+    ],
+    "new_logprob": -0.2876820724517809,
+    "old_logprob": -0.2876820724517809,
+    "ratio": 1.0,
+    "clipped_ratio": 1.0,
+    "clipped_branch": false,
+    "advantage_fixed": 0.5,
+    "temperature": 1.0,
+    "loss": -0.5,
+    "analytic_gradient": [
+      0.125,
+      -0.125
+    ],
+    "finite_difference_gradient": [
+      0.12500000001747225,
+      -0.12500000001747225
+    ],
+    "learning_rate": 0.1,
+    "updated_logits": [
+      -0.0125,
+      1.1111122886681097
+    ],
+    "updated_selected_probability": 0.7546581439909178,
+    "frozen_values": [
+      "old_logprob",
+      "advantage"
+    ],
+    "reference_policy": "omitted; isolate PG in this toy"
+  },
+  "temperature": {
+    "T1_probability": 0.75,
+    "T2_probability": 0.6339745962155614
+  },
+  "clip": {
+    "positive_advantage": {
+      "loss": -1.2,
+      "gradient": [
+        0.0,
+        0.0
+      ],
+      "probabilities": [
+        0.09999999999999998,
+        0.8999999999999999
+      ],
+      "new_logprob": -0.1053605156578264,
+      "old_logprob": -0.6931471805599453,
+      "ratio": 1.7999999999999996,
+      "clipped_ratio": 1.2,
+      "clipped_branch": true,
+      "advantage_fixed": 1.0,
+      "temperature": 1.0
+    },
+    "negative_advantage": {
+      "loss": 1.7999999999999996,
+      "gradient": [
+        -0.1799999999999999,
+        0.18000000000000013
+      ],
+      "probabilities": [
+        0.09999999999999998,
+        0.8999999999999999
+      ],
+      "new_logprob": -0.1053605156578264,
+      "old_logprob": -0.6931471805599453,
+      "ratio": 1.7999999999999996,
+      "clipped_ratio": 1.2,
+      "clipped_branch": false,
+      "advantage_fixed": -1.0,
+      "temperature": 1.0
+    }
+  },
+  "mask_and_reduction": {
+    "same_micro_batch_token_mean": -0.5,
+    "per_response_then_mean": 0.0,
+    "two_equal_weight_micro_batches": 0.0,
+    "note": "The source normalizes within each micro batch, then accumulates. Not a global-mini-batch token average.",
+    "eos_example": [
+      1,
+      1,
+      1,
+      0,
+      0
+    ],
+    "no_eos_example": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "pad_without_eos_example": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "manual_check": [
+    "Why freezing old prevents cancellation?",
+    "Why clip is not gradient-norm clipping?",
+    "Why reward need not be differentiable?",
+    "Why no-EOS mask cannot prove natural completion?"
+  ]
+}

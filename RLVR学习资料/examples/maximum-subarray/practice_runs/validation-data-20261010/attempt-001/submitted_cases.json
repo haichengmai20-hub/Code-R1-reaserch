@@ -1,0 +1,163 @@
+[
+  {
+    "case_id": "seed-1",
+    "input": {
+      "nums": [
+        -2,
+        1,
+        -3,
+        4,
+        -1,
+        2,
+        1,
+        -5,
+        4
+      ]
+    },
+    "expected": 6,
+    "input_sha256": "346be4ae3d8e8a24cd5b9d34d05a3f1ec48751f7a5ef540bea38c0c9997fe013",
+    "origin": {
+      "kind": "original_seed",
+      "dataset_line_1_based": 143,
+      "test_line_1_based": 2,
+      "original_split": "rl"
+    }
+  },
+  {
+    "case_id": "seed-2",
+    "input": {
+      "nums": [
+        1
+      ]
+    },
+    "expected": 1,
+    "input_sha256": "743cc9c241016f921bb01425c09b37d9d1801f2510663f8595a489c7063544b8",
+    "origin": {
+      "kind": "original_seed",
+      "dataset_line_1_based": 143,
+      "test_line_1_based": 3,
+      "original_split": "rl"
+    }
+  },
+  {
+    "case_id": "seed-3",
+    "input": {
+      "nums": [
+        5,
+        4,
+        -1,
+        7,
+        8
+      ]
+    },
+    "expected": 23,
+    "input_sha256": "3237d6c418ee86238c5d72789394d793f1237c244b921bbd3cce2844d2ae7a50",
+    "origin": {
+      "kind": "original_seed",
+      "dataset_line_1_based": 143,
+      "test_line_1_based": 4,
+      "original_split": "rl"
+    }
+  },
+  {
+    "case_id": "diag-all-negative",
+    "input": {
+      "nums": [
+        -3,
+        -2,
+        -5
+      ]
+    },
+    "expected": -2,
+    "input_sha256": "3110ca06e951eca3182b0c9baad536a33739683535e7851478ebf4317aa56b8d",
+    "origin": {
+      "kind": "verified_diagnostic_proposal",
+      "test_version": "maximum-subarray-diagnostic-v1"
+    }
+  },
+  {
+    "case_id": "diag-restart",
+    "input": {
+      "nums": [
+        2,
+        -5,
+        3,
+        4,
+        -1
+      ]
+    },
+    "expected": 7,
+    "input_sha256": "ba6225c68c9b177e23afc6a6642a67c073f193fec75ad56418c8d5cec7a96778",
+    "origin": {
+      "kind": "verified_diagnostic_proposal",
+      "test_version": "maximum-subarray-diagnostic-v1"
+    }
+  },
+  {
+    "case_id": "diag-zero",
+    "input": {
+      "nums": [
+        0,
+        0
+      ]
+    },
+    "expected": 0,
+    "input_sha256": "f89070ac4b7a23ebdf9a6c296680b3b6e564f62051ab7f0ad86448bbf8f498f3",
+    "origin": {
+      "kind": "verified_diagnostic_proposal",
+      "test_version": "maximum-subarray-diagnostic-v1"
+    }
+  },
+  {
+    "case_id": "diag-single-negative",
+    "input": {
+      "nums": [
+        -7
+      ]
+    },
+    "expected": -7,
+    "input_sha256": "7e19c7c0663069b67b48d3c3bdc54b8a33edfe6711b5c903c1836b0d6eb637f5",
+    "origin": {
+      "kind": "verified_diagnostic_proposal",
+      "test_version": "maximum-subarray-diagnostic-v1"
+    }
+  },
+  {
+    "case_id": "diag-boundary",
+    "input": {
+      "nums": [
+        10000,
+        -10000,
+        10000
+      ]
+    },
+    "expected": 10000,
+    "input_sha256": "1e7d3a7edd57f3c386dca530c6f21ba474a2cd100d223d2693ddff585d421a63",
+    "origin": {
+      "kind": "verified_diagnostic_proposal",
+      "test_version": "maximum-subarray-diagnostic-v1"
+    }
+  },
+  {
+    "case_id": "author-ninth",
+    "input": {
+      "nums": [
+        -2,
+        4,
+        -1
+      ]
+    },
+    "expected": 4,
+    "origin": "author validation only; not student mastery"
+  },
+  {
+    "case_id": "author-bad-pair",
+    "input": {
+      "nums": [
+        1
+      ]
+    },
+    "expected": 23,
+    "origin": "intentional author wrong-pair contrast"
+  }
+]

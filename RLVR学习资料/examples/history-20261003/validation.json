@@ -1,0 +1,21 @@
+{
+  "doc_lines": 1191,
+  "doc_characters": 43837,
+  "utf8_no_bom": true,
+  "fences": 17,
+  "python_blocks_ast_pass": 3,
+  "relative_links_checked": 37,
+  "protected_jsonl_hashes_unchanged": 5,
+  "original_six_chapters_preserved": true,
+  "homework_stages": 13,
+  "math_delimiters_balanced": true,
+  "removed_nonempty_original_lines": [
+    "| Reference Code | 用于生成或核验 Expected Output 的正确实现 | 可选 |",
+    "    └─ 题意与约束完整性检查",
+    "⑧ Difficulty Filtering",
+    "- [DeepSeek-R1](https://arxiv.org/abs/2501.12948)：公开论文介绍了代码任务使用编译器和预定义测试集产生基于规则的正确性 Reward。",
+    "Difficulty Filtering",
+    "第一条保证 Reward 的可信性，第二条利用可信 Reward 优化策略。Bad Case Attribution 则把两条主线连接成持续迭代的工业闭环。"
+  ],
+  "sha256": "92aa024baea358f29a33c26921b82e65f3a6d6498baae8bf46ec51114519e4a0"
+}

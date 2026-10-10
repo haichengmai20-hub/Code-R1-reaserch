@@ -1,0 +1,15 @@
+{
+  "A": {
+    "legacy_pass": true,
+    "semantic_pass": true
+  },
+  "B": {
+    "legacy_pass": false,
+    "semantic_pass": true
+  },
+  "C": {
+    "legacy_pass": false,
+    "semantic_pass": false
+  },
+  "why": "Author reviewed three fixed programs and distinct-index/order contract."
+}
