@@ -1,0 +1,284 @@
+{
+  "models": [
+    "base",
+    "run-01",
+    "run-02"
+  ],
+  "dev": {
+    "n": 200,
+    "greedy_pass1": {
+      "base": 0.38,
+      "run-01": 0.615,
+      "run-02": 0.635
+    },
+    "greedy_pass_count": {
+      "base": 76,
+      "run-01": 123,
+      "run-02": 127
+    },
+    "greedy_format_fail": {
+      "base": 0.185,
+      "run-01": 0.025,
+      "run-02": 0.02
+    },
+    "greedy_by_difficulty": {
+      "base": {
+        "easy": {
+          "pass1": 0.4706,
+          "n": 51
+        },
+        "hard": {
+          "pass1": 0.1915,
+          "n": 47
+        },
+        "medium": {
+          "pass1": 0.4216,
+          "n": 102
+        }
+      },
+      "run-01": {
+        "easy": {
+          "pass1": 0.8039,
+          "n": 51
+        },
+        "hard": {
+          "pass1": 0.2766,
+          "n": 47
+        },
+        "medium": {
+          "pass1": 0.6765,
+          "n": 102
+        }
+      },
+      "run-02": {
+        "easy": {
+          "pass1": 0.8235,
+          "n": 51
+        },
+        "hard": {
+          "pass1": 0.3404,
+          "n": 47
+        },
+        "medium": {
+          "pass1": 0.6765,
+          "n": 102
+        }
+      }
+    },
+    "sampled": {
+      "base": {
+        "pass@1_by_seed": {
+          "1": 0.3588,
+          "2": 0.3431,
+          "3": 0.3531
+        },
+        "pass@1_mean": 0.3517,
+        "pass@1_std": 0.0079,
+        "pass@8_by_seed": {
+          "1": 0.785,
+          "2": 0.735,
+          "3": 0.785
+        },
+        "pass@8_mean": 0.7683
+      },
+      "run-01": {
+        "pass@1_by_seed": {
+          "1": 0.58,
+          "2": 0.5863,
+          "3": 0.5956
+        },
+        "pass@1_mean": 0.5873,
+        "pass@1_std": 0.0079,
+        "pass@8_by_seed": {
+          "1": 0.865,
+          "2": 0.895,
+          "3": 0.91
+        },
+        "pass@8_mean": 0.89
+      },
+      "run-02": {
+        "pass@1_by_seed": {
+          "1": 0.6419,
+          "2": 0.6512,
+          "3": 0.6269
+        },
+        "pass@1_mean": 0.64,
+        "pass@1_std": 0.0123,
+        "pass@8_by_seed": {
+          "1": 0.915,
+          "2": 0.915,
+          "3": 0.89
+        },
+        "pass@8_mean": 0.9067
+      }
+    },
+    "paired_greedy": {
+      "run-01_vs_base": {
+        "win": 49,
+        "loss": 2,
+        "same": 149,
+        "net": 47,
+        "net_points": 23.5
+      },
+      "run-02_vs_base": {
+        "win": 52,
+        "loss": 1,
+        "same": 147,
+        "net": 51,
+        "net_points": 25.5
+      },
+      "run-02_vs_run-01": {
+        "win": 12,
+        "loss": 8,
+        "same": 180,
+        "net": 4,
+        "net_points": 2.0
+      }
+    }
+  },
+  "lcb": {
+    "n": 142,
+    "greedy_pass1": {
+      "base": 0.1338,
+      "run-01": 0.2465,
+      "run-02": 0.3169
+    },
+    "greedy_pass_count": {
+      "base": 19,
+      "run-01": 35,
+      "run-02": 45
+    },
+    "greedy_format_fail": {
+      "base": 0.2042,
+      "run-01": 0.0211,
+      "run-02": 0.0211
+    },
+    "greedy_by_difficulty": {
+      "base": {
+        "medium": {
+          "pass1": 0.0656,
+          "n": 61
+        },
+        "hard": {
+          "pass1": 0.0526,
+          "n": 38
+        },
+        "easy": {
+          "pass1": 0.3023,
+          "n": 43
+        }
+      },
+      "run-01": {
+        "medium": {
+          "pass1": 0.1475,
+          "n": 61
+        },
+        "hard": {
+          "pass1": 0.0526,
+          "n": 38
+        },
+        "easy": {
+          "pass1": 0.5581,
+          "n": 43
+        }
+      },
+      "run-02": {
+        "medium": {
+          "pass1": 0.2295,
+          "n": 61
+        },
+        "hard": {
+          "pass1": 0.1316,
+          "n": 38
+        },
+        "easy": {
+          "pass1": 0.6047,
+          "n": 43
+        }
+      }
+    },
+    "sampled": {
+      "base": {
+        "pass@1_by_seed": {
+          "1": 0.1065,
+          "2": 0.1039,
+          "3": 0.096
+        },
+        "pass@1_mean": 0.1021,
+        "pass@1_std": 0.0055,
+        "pass@8_by_seed": {
+          "1": 0.3521,
+          "2": 0.3592,
+          "3": 0.3873
+        },
+        "pass@8_mean": 0.3662
+      },
+      "run-01": {
+        "pass@1_by_seed": {
+          "1": 0.2271,
+          "2": 0.2482,
+          "3": 0.2183
+        },
+        "pass@1_mean": 0.2312,
+        "pass@1_std": 0.0154,
+        "pass@8_by_seed": {
+          "1": 0.5986,
+          "2": 0.5423,
+          "3": 0.6056
+        },
+        "pass@8_mean": 0.5822
+      },
+      "run-02": {
+        "pass@1_by_seed": {
+          "1": 0.3055,
+          "2": 0.2773,
+          "3": 0.2905
+        },
+        "pass@1_mean": 0.2911,
+        "pass@1_std": 0.0141,
+        "pass@8_by_seed": {
+          "1": 0.6901,
+          "2": 0.6831,
+          "3": 0.7113
+        },
+        "pass@8_mean": 0.6948
+      }
+    },
+    "paired_greedy": {
+      "run-01_vs_base": {
+        "win": 18,
+        "loss": 2,
+        "same": 122,
+        "net": 16,
+        "net_points": 11.3
+      },
+      "run-02_vs_base": {
+        "win": 26,
+        "loss": 0,
+        "same": 116,
+        "net": 26,
+        "net_points": 18.3
+      },
+      "run-02_vs_run-01": {
+        "win": 11,
+        "loss": 1,
+        "same": 130,
+        "net": 10,
+        "net_points": 7.0
+      }
+    }
+  },
+  "evalplus": {
+    "humaneval_plus_pass1": {
+      "base": 0.671,
+      "run-01": 0.689,
+      "run-02": 0.701
+    },
+    "mbpp_plus_pass1": {
+      "base": 0.681,
+      "run-01": 0.694,
+      "run-02": 0.706
+    },
+    "note": "EvalPlus 0.3.1，贪心，max_tokens 8192；数字为推演"
+  }
+}

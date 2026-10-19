@@ -1,0 +1,246 @@
+{
+  "models": [
+    "base",
+    "your-01",
+    "your-02"
+  ],
+  "checkpoints": {
+    "your-01": "global_step_200",
+    "your-02": "global_step_400"
+  },
+  "note": "dev = v2 test 200 题（your-01 训练中也用它验证；your-02 改用切出的 200 题验证，dev 只在最后评）；lcb = LiveCodeBench 2025-05-01 以后 142 题 held-out，只评一次、不用于选 checkpoint",
+  "dev": {
+    "n": 200,
+    "greedy_pass1": {
+      "base": 0.38,
+      "your-01": 0.575,
+      "your-02": 0.605
+    },
+    "greedy_pass_count": {
+      "base": 76,
+      "your-01": 115,
+      "your-02": 121
+    },
+    "greedy_format_fail": {
+      "base": 0.185,
+      "your-01": 0.025,
+      "your-02": 0.02
+    },
+    "greedy_by_difficulty": {
+      "base": {
+        "easy": {
+          "pass1": 0.4706,
+          "n": 51
+        },
+        "hard": {
+          "pass1": 0.1915,
+          "n": 47
+        },
+        "medium": {
+          "pass1": 0.4216,
+          "n": 102
+        }
+      },
+      "your-01": {
+        "easy": {
+          "pass1": 0.7451,
+          "n": 51
+        },
+        "hard": {
+          "pass1": 0.2553,
+          "n": 47
+        },
+        "medium": {
+          "pass1": 0.6373,
+          "n": 102
+        }
+      },
+      "your-02": {
+        "easy": {
+          "pass1": 0.7843,
+          "n": 51
+        },
+        "hard": {
+          "pass1": 0.2979,
+          "n": 47
+        },
+        "medium": {
+          "pass1": 0.6569,
+          "n": 102
+        }
+      }
+    },
+    "sampled": {
+      "base": {
+        "pass@1_by_seed": {
+          "1": 0.3588,
+          "2": 0.3431,
+          "3": 0.3531
+        },
+        "pass@1_mean": 0.3517,
+        "pass@1_std": 0.0079,
+        "pass@8_mean": 0.7683
+      },
+      "your-01": {
+        "pass@1_by_seed": {
+          "1": 0.5469,
+          "2": 0.5444,
+          "3": 0.5525
+        },
+        "pass@1_mean": 0.5479,
+        "pass@1_std": 0.0042,
+        "pass@8_mean": 0.87
+      },
+      "your-02": {
+        "pass@1_by_seed": {
+          "1": 0.6281,
+          "2": 0.6312,
+          "3": 0.6106
+        },
+        "pass@1_mean": 0.6233,
+        "pass@1_std": 0.0111,
+        "pass@8_mean": 0.8983
+      }
+    },
+    "paired_greedy": {
+      "your-01_vs_base": {
+        "win": 41,
+        "loss": 2,
+        "same": 157,
+        "net": 39,
+        "net_points": 19.5
+      },
+      "your-02_vs_base": {
+        "win": 46,
+        "loss": 1,
+        "same": 153,
+        "net": 45,
+        "net_points": 22.5
+      },
+      "your-02_vs_your-01": {
+        "win": 9,
+        "loss": 3,
+        "same": 188,
+        "net": 6,
+        "net_points": 3.0
+      }
+    }
+  },
+  "lcb": {
+    "n": 142,
+    "greedy_pass1": {
+      "base": 0.1338,
+      "your-01": 0.2606,
+      "your-02": 0.3169
+    },
+    "greedy_pass_count": {
+      "base": 19,
+      "your-01": 37,
+      "your-02": 45
+    },
+    "greedy_format_fail": {
+      "base": 0.2042,
+      "your-01": 0.0211,
+      "your-02": 0.0211
+    },
+    "greedy_by_difficulty": {
+      "base": {
+        "medium": {
+          "pass1": 0.0656,
+          "n": 61
+        },
+        "hard": {
+          "pass1": 0.0526,
+          "n": 38
+        },
+        "easy": {
+          "pass1": 0.3023,
+          "n": 43
+        }
+      },
+      "your-01": {
+        "medium": {
+          "pass1": 0.1475,
+          "n": 61
+        },
+        "hard": {
+          "pass1": 0.0789,
+          "n": 38
+        },
+        "easy": {
+          "pass1": 0.5814,
+          "n": 43
+        }
+      },
+      "your-02": {
+        "medium": {
+          "pass1": 0.2295,
+          "n": 61
+        },
+        "hard": {
+          "pass1": 0.1316,
+          "n": 38
+        },
+        "easy": {
+          "pass1": 0.6047,
+          "n": 43
+        }
+      }
+    },
+    "sampled": {
+      "base": {
+        "pass@1_by_seed": {
+          "1": 0.1065,
+          "2": 0.1039,
+          "3": 0.096
+        },
+        "pass@1_mean": 0.1021,
+        "pass@1_std": 0.0055,
+        "pass@8_mean": 0.3662
+      },
+      "your-01": {
+        "pass@1_by_seed": {
+          "1": 0.2333,
+          "2": 0.2553,
+          "3": 0.2262
+        },
+        "pass@1_mean": 0.2383,
+        "pass@1_std": 0.0152,
+        "pass@8_mean": 0.5962
+      },
+      "your-02": {
+        "pass@1_by_seed": {
+          "1": 0.2984,
+          "2": 0.2729,
+          "3": 0.2852
+        },
+        "pass@1_mean": 0.2855,
+        "pass@1_std": 0.0128,
+        "pass@8_mean": 0.6925
+      }
+    },
+    "paired_greedy": {
+      "your-01_vs_base": {
+        "win": 20,
+        "loss": 2,
+        "same": 120,
+        "net": 18,
+        "net_points": 12.7
+      },
+      "your-02_vs_base": {
+        "win": 26,
+        "loss": 0,
+        "same": 116,
+        "net": 26,
+        "net_points": 18.3
+      },
+      "your-02_vs_your-01": {
+        "win": 9,
+        "loss": 1,
+        "same": 132,
+        "net": 8,
+        "net_points": 5.6
+      }
+    }
+  }
+}

@@ -1,12 +1,12 @@
 # Code RLVR 学习主框架：最小闭环与工业扩展
 
-**资料导航：** [资料首页](README.md) · **工业主框架（当前）** · [01 数据与 GT](01_数据理解与GT构建.md) · [02 Verifier 与任务池](02_Verifier与任务池验收.md) · [03 Rollout 与 GRPO](03_Rollout与GRPO机制.md) · [04 训练与评测](04_真实训练与独立评测.md)
+**资料导航：** [资料首页](README.md) · **工业主框架（当前）** · [00 全程走读](00_一条记录从原始Task到训练.md) · [01 数据与 GT](01_数据理解与GT构建.md) · [02 Verifier 与任务池](02_Verifier与任务池验收.md) · [03 Rollout 与 GRPO](03_Rollout与GRPO机制.md) · [04 训练与评测](04_真实训练与独立评测.md)
 
-**适用范围：** 单题代码生成、函数实现、竞赛编程。学习从 [资料首页](README.md) 和 01—04 阶段进入，本文按机制查阅。主线使用真实 Hot 100「最大子数组和」，原服务器题和五题材料保留为补充案例与历史证据。
+**适用范围：** 单题代码生成、函数实现、竞赛编程。学习从 [资料首页](README.md) 和 01—04 阶段进入，本文按机制查阅。全文唯一的贯穿题是真实 Hot 100「最大子数组和」，即 LeetCode 53，所有机制例子都用它。这道题从原始记录走到训练的全过程见 [00 全程走读](00_一条记录从原始Task到训练.md)；旧版资料用过的五道题只在第七章作为历史归档提及。
 
 **审查结论：** 原文的“离线数据构造 → 在线验证与训练 → 独立评测与归因”主线合理，可以作为学习与方案设计的强参考。要用来逐项解释 Code-R1 源码，必须区分通用设计、当前源码行为与实际执行证据；要用于生产训练，还需要对目标执行后端验收。本文按本地源码补齐这些边界，不把一张流程图等同于已经完成的工业系统。
 
-**核对基线：** 本次文档修订为 2026-10-09；Code-R1 本地提交 `443f8da8058d07051793eff875da117534fd1ba1`，remote 为 `ganler/code-r1`；LeetCodeDataset 本地提交 `f3519e6b7f42265dd4e4d35d4812e8c29b08111a`，remote 为 `newfacade/LeetCodeDataset`。`[Code-R1 实现]` 说明当前源码，`[通用设计]` 说明扩展目标，`[2026-10-03 历史核验]` 说明旧五题的检查；新演示使用自己的 [运行报告](examples/maximum-subarray/outputs/report.json)。配置与源码不单独证明训练已执行或效果已提高。
+**核对基线：** 最近修订 2026-10-13，全文贯穿题统一为 LeetCode 53；Code-R1 本地提交 `443f8da8058d07051793eff875da117534fd1ba1`，remote 为 `ganler/code-r1`；LeetCodeDataset 本地提交 `f3519e6b7f42265dd4e4d35d4812e8c29b08111a`，remote 为 `newfacade/LeetCodeDataset`。`[Code-R1 实现]` 说明当前源码，`[通用设计]` 说明扩展目标；本机实际跑出的结果写明日期，例如「2026-10-13 实测」。LeetCode 53 演示的结果见 [运行报告](examples/maximum-subarray/outputs/report.json)。配置与源码不单独证明训练已执行或效果已提高。
 
 ## 阅读前先知道：原文哪些地方需要补强
 
@@ -17,15 +17,15 @@
 | 元数据 | 原文缺少获取、映射与版本说明 | 元数据说明题目身份和协议；它不直接证明题目或答案正确 |
 | imports 与入口 | 两套评测路径不同：原生评测器拼接 imports，RL 评分器不自动补 LeetCode imports | 同一份裸 `completion` 可能在一边通过、另一边 `NameError` |
 | 原始奖励 | 母版默认二值奖励属于设计；Code-R1 实际有 `-1.1 / 0.1 / 1.1`，管理器异常还可能回填 `0.0` | 学习 GRPO 前先核对实际 reward，不能直接套二值成功率 |
-| Train/Eval 隔离 | 必须绑定数据版本和评测协议；v1 的 test 题可能成为 v2 的训练题 | “五题标记 test，所以永远不能训练”过强；如果继续以 v1 test 评测，则必须从 v2 训练来源排除这些题 |
+| Train/Eval 隔离 | 必须绑定数据版本和评测协议；v1 的 175 道 test 题里有 61 道在 v2 成了训练题 | “标过 test 的题永远不能训练”过强；如果继续以 v1 test 评测，则必须从 v2 训练来源排除这些题 |
 | Verifier 可信性 | Sandbox 隔离与判题可信性需要分别验收 | 进程退出码为 0 不证明测试完成；本次受控探针已复现提前退出得高分的缺口 |
-| Actor 可见信息 | 五条 `meta.query` 没有题面中的 Constraints 段 | 构造 prompt 时应审核规模与约束是否传给模型，否则不能只在隐藏大输入上要求它满足未说明的规模 |
+| Actor 可见信息 | `meta.query` 不含题面中的 Constraints 和样例；v1、v2 共 3835 条记录全都如此 | 构造 prompt 时应审核规模与约束是否传给模型，否则不能只在隐藏大输入上要求它满足未说明的规模 |
 | 难度过滤 | 是可选的训练采样策略，不是数据正确性的必需定义；当前预处理器没有完整的 Policy Rollout 难度筛选 | 必须先让奖励可靠，再用特定 checkpoint 估计难度 |
 | “独立验证” | 不同算法的对照提高可信度；不同文件、不同模型回答、重复运行不天然独立 | 记录算法与证据来源，避免两个实现共享同一个题意误解 |
 
 附件中的 Code-R1 审查已经正确提醒：LeetCode 分支主要封装已有测试；TACO 验证用 `solutions[-1]`，保存的 reference 却是 `solutions[0]`。本次补充还要求区分数据版本、执行前缀和测试是否实际完成。这里的“强参考”指可追溯的学习与工程参考；某份代码能否成为可信 Oracle，仍要单独建立证据。
 
-**怎么读：** 第一章给出 MVP 和贯穿题；第二章说明 Task 清洗、逐条测试审核与入池；第三至六章按需查执行、训练、评测与归因；第七章保留旧核验记录。首次学习按四阶段推进，在需要解释某个机制时跳到本文对应小节。2026-10-10 的课程修订增加学生练习与机制验收，源码基线仍为上述提交。
+**怎么读：** 第一章给出 MVP 和贯穿题；第二章说明 Task 清洗、逐条测试审核与入池；第三至六章按需查执行、训练、评测与归因；第七章汇总证据边界，并给出旧版历史归档的位置。首次学习按四阶段推进，在需要解释某个机制时跳到本文对应小节。2026-10-10 的课程修订增加学生练习与机制验收，源码基线仍为上述提交。
 
 **四项基本原则：**
 
@@ -83,8 +83,8 @@ metadata 是 Task 的身份与履历，不另造一种“meta task”。原始 L
 
 在项目根目录运行 [受控演示](examples/maximum-subarray/run_demo.py)：
 
-```powershell
-python RLVR学习资料/examples/maximum-subarray/run_demo.py all
+```bash
+$PY -B RLVR学习资料/examples/maximum-subarray/run_demo.py all
 ```
 
 同一资产依次展示原记录、逐条审核、GT、原 scorer、组内优势与指标；具体结果见 [报告](examples/maximum-subarray/outputs/report.json)。原记录的 `meta.split=rl` 保留为来源事实，本课使用 `diagnostic`；熟悉题或手工候选上的结果不作为未见题泛化成绩。
@@ -125,60 +125,37 @@ $$
 
 ## 阶段 A 的逐步解释：输入、规则、例子与完成条件
 
+<a id="a1-preparation"></a>
+
 ### A1. 元数据获取与 Task Preparation：先把题目读成能执行的任务
 
 **人话：** 先弄清这张题卡从哪来、要求写哪个函数、合法输入是什么，再统一字段名称。获取元数据主要是读取已有字段并记录来源；不需要让 LLM 猜一遍已经写在 JSONL 里的 ID 和难度。
 
 **[Code-R1 实现]** 原生 `leetcote/data.py` 的 `read_jsonl()` 逐行 `json.loads()`；`read_problems()` 按 `task_id` 建字典。预处理器的 `leetcode2k()` 通过 Hugging Face Datasets 加载本地 **v2** JSONL。文件名、加载器的 `"train"` 容器名称、原始 `meta.split`、最终 `extra_info.split` 是不同层的概念，必须记录各自含义。
 
-贯穿题的清洗顺序是：读取原记录并保留源版本 → 检查 task_id、题面、`maxSubArray(nums)` 接口与返回整数的规则 → 核对非空和数值范围 → 生成包含这些约束的 actor prompt → 按题身份去重/划分 → 审核已有与新增测试 → 编码为 Code-R1 样本。代码块、转义和空白只做明确的格式适配，不能全局替换后改变题意或 Python 程序。下面的服务器题字段表保留为第二个来源映射例。
+贯穿题的清洗顺序是：读取原记录并保留源版本 → 检查 task_id、题面、`maxSubArray(nums)` 接口与返回整数的规则 → 核对非空和数值范围 → 生成包含这些约束的 actor prompt → 按题身份去重和划分 → 审核已有与新增测试 → 编码为 Code-R1 样本。代码块、转义和空白只做明确的格式适配，不能全局替换后改变题意或 Python 程序。
 
-| 原始字段 | 人话与用途 | 服务器题的实际映射 |
+LeetCode 53 这条记录里最关键的五个原始字段：
+
+| 原始字段 | 人话与用途 | LeetCode 53 的实际值 |
 |---|---|---|
-| `task_id` | 稳定标识题目 | `count-zero-request-servers` |
-| `meta.question_id` | 来源题库的内部 ID，用于该来源内去重 | `2833`；不可默认当成网页展示题号 |
-| `meta.difficulty` | 来源难度标签 | `Medium`；保留原值，另记 policy 难度 |
-| `meta.question_title` | 字段名虽叫 title，内容实际是完整题面 | 用于检查闭区间、约束和说明 |
-| `meta.query` | 原始模型输入文本，含函数签名 | 作为 actor prompt 的主要来源，补审约束是否完整 |
-| 原始 `prompt` | 运行前缀，通常是一串 Python imports | 记为 `runtime_prelude`，不要当成题目自然语言 |
-| `entry_point` | 候选解应该提供的调用位置 | `Solution().countServers` |
-| `test` / `examples` | 已有 seed 检查与描述性样例 | seed tests；彼此来源相关，不构成两个独立 Oracle |
-| `completion` | 去掉 imports 前缀后的参考实现候选 | 先审可执行性和正确性，不自动授予 Oracle 身份 |
-| `meta.response` | 保存的历史模型回答 | 可用于挖错；不是本轮 actor rollout，也不能靠 README 的“correct response”描述认定正确 |
-| 来源版本与 `meta.split` | 题卡从哪一版哪一份文件来 | 本次读取 `v1-test`；实际训练路由另见 A2 |
+| `task_id` | 稳定标识题目 | `maximum-subarray` |
+| `meta.question_id` | 来源题库的数字 ID，用于去重和 train/test 排除 | `53` |
+| `meta.query` | 给模型的短题面，含函数签名 | 题面第一段加签名，不含约束和样例 |
+| `test` 与 `entry_point` | 判题依据与调用入口 | 3 条 assert；`Solution().maxSubArray` |
+| `completion` | 参考实现候选 | Kadane 实现；先审再用，不自动成为 Oracle |
 
-**[通用设计]** MVP 的 metadata 只需说明身份、来源、用途和所用测试。这里是教学表示，Code-R1 实际样本通过 `extra_info` 保存辅助信息；新增溯源字段属于演示扩展，不声称原预处理器已经全部保存。
+原始记录的 14 个字段、Code-R1 训练行的 10 个字段、演示扩展的 20 个字段，各自的含义和消费者见 [01 的 metadata 字段字典](01_数据理解与GT构建.md#metadata-fields)。
 
-下面只列实际字段位置，完整内容以 `prepared_task.json` 为准：
-
-```yaml
-data_source: code
-ability: coding
-prompt: 聊天格式题目，保留原 query 并追加已核对约束
-reward_model:
-  style: rule
-  ground_truth: 已接受 Tests 与入口的 JSON 字符串
-extra_info:
-  task_id: maximum-subarray
-  source_file: LeetCodeDataset/data/LeetCodeDataset-v2-rl-problems.jsonl
-  source_line_1_based: 143
-  source_question_id: 53
-  source_difficulty: Medium
-  dataset_revision: f3519e6b7f42265dd4e4d35d4812e8c29b08111a
-  original_corpus_split: rl
-  split: diagnostic
-  test_version: maximum-subarray-diagnostic-v1
-  data_acceptance: 引用逐条审核结果，不是手工正确性盖章
-  train_ready: false
-```
-
-原 difficulty、原题面和原测试保存在 [原始记录](examples/maximum-subarray/outputs/raw_task.json)，随时可追溯；policy 难度、家族标签等在后续实验需要时补充。`actor_prompt_adaptation` 记录原 query、追加约束的来源与具体文本，原 Code-R1 preprocess 未做这项追加。原始 `rl` 表示该来源的划分，本课 `diagnostic` 表示用途；记录来源标签不等于决定本次 train/eval 协议。判分与环境配置共享于实验，首次无需复制成十几种 Task 定义。
+**[通用设计]** MVP 的 metadata 只需说明身份、来源、用途和所用测试。Code-R1 实际样本通过 `extra_info` 保存辅助信息；演示新增的溯源字段属于本课扩展，原预处理器没有。原始 `rl` 表示来源划分，本课 `diagnostic` 表示用途；记录来源标签不等于决定本次 train/eval 协议。原始题面、难度和测试保存在 [原始记录](examples/maximum-subarray/outputs/raw_task.json)，随时可追溯。
 
 对应练习：[清洗与 metadata](01_数据理解与GT构建.md#assignment-1-1)。
 
-**例子：** 本次五条 actor query 没有 Constraints 段，而完整题面有。服务器题若最多 `10^5` 日志和 `10^5` 查询，暴力法与滑动窗口的工程可行性不同。构造 prompt 时应明确传递已审核的约束，同时保持隐藏测试和答案不进入 actor 输入。另一个审核点是 `maximum-sum-queries` 的二元素查询混用 1 基叙述；当前[官方题面](https://leetcode.com/problems/maximum-sum-queries/description/)也保留该写法。Python 适配应明确写成 `xi, yi = queries[i]`，记录适配理由，不能机械访问第三个元素。
+**例子：** LeetCode 53 的 `meta.query` 只有题面第一段和签名，没有约束也没有样例。完整题面在 `meta.question_title`，但约束的上标在抓取时丢了，字面是 `1 <= nums.length <= 105`，真实含义是 10^5。构造 prompt 时应按官方题面补写已审核的约束并记录来源，不能全局替换数字；同时保持隐藏测试和答案不进入 actor 输入。演示版追加的约束原文见 [01 的 actor prompt](01_数据理解与GT构建.md#actor-prompt)。
 
-**完成条件：** 严格 JSONL 能读；必填字段、签名、返回类型和合法输入规则一致；来源和适配可追溯。`read_problems()` 的字典会覆盖重复 `task_id`，因此要在建字典前统计重复。原始文件本次解析成功，不能把聊天导出中的转义或显示问题推定为磁盘文件损坏。
+**完成条件：** 严格 JSONL 能读；必填字段、签名、返回类型和合法输入规则一致；来源和适配可追溯。`read_problems()` 的字典会覆盖重复 `task_id`，因此要在建字典前统计重复。
+
+<a id="a2-filtering"></a>
 
 ### A2. 过滤、去重与划分：决定这道题能否进入本次实验
 
@@ -186,17 +163,11 @@ extra_info:
 
 **[Code-R1 实现]** `leetcode2k()` 合并 v2 RL 与 v2 SFT 文件，排除 **v2 test 的 `question_id`**，再按 ID 保留第一次出现的题。它没有证明跨所有版本、所有 benchmark 的语义去重已经完成。
 
-**[2026-10-03 历史核验]** 原五题在不同版本中的位置如下：
+实际上 v2 RL 与 v2 SFT 各 945 题、互不重复，也都不与 v2 test 相交，所以这一步一行没删，得到 1890 题。
 
-| Task | v1 文件位置 | v2 文件位置 |
-|---|---|---|
-| `find-the-longest-equal-subarray` | test | sft |
-| `count-zero-request-servers` | test | rl |
-| `relocate-marbles` | test | rl |
-| `sum-of-matrix-after-queries` | test | sft |
-| `maximum-sum-queries` | test | rl |
+**版本协议决定一道题能不能训练。** 同一道题在不同版本里的身份可能不同：v1 的 175 道 test 题里，有 61 道在 v2 变成了 rl 或 sft 训练题。若锁定 **v1 test** 作为评测，用 v2 来源训练时必须排除这些题及相关题目家族；若按 Code-R1 的 **v2 test** 协议，它们可以训练，但训练后不能再拿它们在 v1 test 上的成绩充当未见题性能。
 
-因此，若锁定 **v1 test** 作为评测，使用 v2 来源训练时必须排除这些题及相关题目家族；若按 Code-R1 的 **v2 test** 协议，它们可以来自该协议的训练来源，但不能再拿 v1 这五题声称是未见过的评测。本文已经用这五题演示、分析错误并扩充测试，所以在本文学习实验中把它们记为 **诊断题**，另选未参与调试的题做最终盲测。
+LeetCode 53 在 v1 属于 train 第 36 行，在 v2 属于 rl 第 143 行，哪个版本的 test 都没有它，按两种协议都是合法训练题。但本课已经用它演示、调试和扩充测试，所以把它记为 **诊断题**，即 `split=diagnostic`；最终盲测要另选没参与调试的题。
 
 **[Code-R1 实现]** TACO 的活跃路径从 `likaixin/TACO-verified` 读取数据，跳过 `geeksforgeeks` 和 `leetcode` 来源、过短题面及包含图片提示的题目；再检查函数型或 STDIO 测试。名称含 verified 不意味着无需二次审查。函数分支里虽然还有 `source == "leetcode"` 的处理，但当前上游过滤已跳过这一来源，不应据这段分支描述活跃路径。
 
@@ -222,57 +193,68 @@ extra_info:
 
 **输出正确性怎样成立：** 对小输入，枚举全部合法子数组并取最大和直接对应题意，手算可以核查实现是否漏项。参考实现与这个独立方法一致是额外证据。对大输入，需要已审核的高效实现、可信正式结果或充分的数学判定依据；只有两个相似程序一致、结果落在合理范围、或模型多次回答相同，不足以单独认证答案。有限对照也不证明 reference 在所有输入上正确。
 
-测试还应能识别确认错误的程序。三条正数 seed 没抓住允许空子数组的错误，补全负例后应能抓住它；这提高给定错误模式的检出能力，不保证覆盖全部错误程序。
+测试还应能识别确认错误的程序。三条 seed 的答案全是正数，没抓住允许空子数组的错误，补全负例后应能抓住它；这提高给定错误模式的检出能力，不保证覆盖全部错误程序。
 
-逐条状态、原配对和审核结果见 [cases.json](examples/maximum-subarray/outputs/cases.json)。对应练习：[作业 1.2](01_数据理解与GT构建.md#assignment-1-2)。以下服务器输入作为补充例保留。
+逐条状态、原配对和审核结果见 [cases.json](examples/maximum-subarray/outputs/cases.json)。对应练习：[作业 1.2](01_数据理解与GT构建.md#assignment-1-2)。
 
-**人话：** 设计哪些输入最能检查错误。随机输入发现意料之外的问题，边界输入检查规则的临界点，针对性输入检查已知错误模式。
+**人话：** 设计哪些输入最能检查错误。随机输入发现意料之外的问题，边界输入检查规则的临界点，针对性输入检查已知错误模式。LeetCode 53 的演示三类都有：
 
-服务器题新增输入可以是：
+| 类型 | 输入 | 想检查什么 |
+|---|---|---|
+| 针对性 | `[-3,-2,-5]`、`[-7]` | 全负数组：抓「允许空子数组、返回 0」的错解 |
+| 针对性 | `[2,-5,3,4,-1]` | 前面累积为负时要丢掉重来，最优段 `[3,4]` 不从开头开始 |
+| 边界 | `[0,0]`、`[10000,-10000,10000]` | 全零；元素取到约束的上下限 |
+| 穷举 | 长度 1 到 4、元素 -2 到 2 的全部 780 个数组 | 发现没预料到的分歧，与暴力枚举逐个对照 |
 
-```python
-inputs = dict(n=2, logs=[[1, 1]], x=1, queries=[2, 3])
-```
-
-它满足服务器 ID 范围和 `x < q` 等约束，专门检查日志落在左端点 `q-x` 时是否计入。此时先把它记为 **候选 Test Input**；即使 Teacher 同时给了 `[1,2]`，也只是候选答案，需要下一步审核。
+新输入先记为 **候选 Test Input**；即使 Teacher 或参考程序同时给了答案，也只是候选答案，需要下一步核对。
 
 **[Code-R1 实现]** LeetCode 分支复用现有 `test`，没有自动生成这些新增输入。TACO 的 `minimize_stdio()` 筛掉 `sys.getsizeof(stdin) > 4*1024` 的输入，并优先保留较短输入，默认最多 8 对。这是执行成本取舍，可能丢失复杂度测试，不能视为覆盖增强；它也没有限制 LeetCode functional 分支只能有 8 条断言。
 
-**完成条件：** 每条输入满足规格；标注为什么添加及打算识别什么错误。弹珠题保证每步 `moveFrom` 位置当时有弹珠，生成器必须维护该状态；随便生成不存在的来源位置不是有效反例。
+**完成条件：** 每条输入满足规格，并标注为什么添加、打算识别什么错误。生成器必须满足题目约束：长度 1 到 10^5，元素 -10^4 到 10^4。空数组、字符串或 bool 元素、越界值都不是合法输入；演示把它们隔离，不拿来指控候选算法。
+
+<a id="a4-answers"></a>
 
 ### A4. 求解与核对答案：方法可换，接受依据要保留
 
 **人话：** 程序吐出一个值，只说明它算出了这个值。文献中的 Oracle 是“确定正确结果的方法/依据”，这里不要求开发一个统一的 Oracle 模块；用手算、暴力枚举或独立高效实现核对，并保留适用范围即可。
 
-服务器题可以独立写一个便于审核的暴力 Oracle：
+LeetCode 53 可以独立写一个便于审核的暴力 Oracle：
 
 ```python
-def servers_oracle(n, logs, x, queries):
-    return [
-        n - len({server for server, time in logs if q - x <= time <= q})
-        for q in queries
-    ]
+def max_subarray_oracle(nums):
+    # 枚举全部非空连续子数组，直接对应题意
+    return max(sum(nums[i:j + 1]) for i in range(len(nums)) for j in range(i, len(nums)))
 ```
 
-对新增输入，`q=2` 的窗口是 `[1,2]`，服务器 1 活跃，所以输出 1；`q=3` 的窗口是 `[2,3]`，没有日志，所以输出 2。手算与暴力实现得到 `[1,2]`，再对照排序滑窗 reference 的结果。暴力法适合小输入审核，不适合拿它承担所有最大规模数据生成。
+对新增输入 `[-3,-2,-5]`，六个非空连续子数组的和是 `-3、-5、-10、-2、-7、-5`，最大值 -2。手算与暴力实现都得到 -2，再对照 Kadane 参考解的结果。这段暴力代码是 O(n³)，适合小输入审核，不适合承担 10^5 规模的数据生成。
 
 **[Code-R1 实现]** LeetCode 把原有测试结果当作已有判定依据，不在这一步重新求解所有答案。TACO 则执行 `solutions[-1]` 检查既有输出，不是由这份解重新生成所有 expected outputs；保存的 `extra_info.reference` 是 `solutions[0]`，二者不要混同。
 
-**完成条件：** 输出有来源与适用范围；分歧先隔离，检查题意、输入、oracle 和 reference，不能自动相信较快实现或简单多数投票。性质检查也要区分充分与必要条件：服务器结果都在 `[0,n]` 是必要条件，单靠它不能证明答案正确。
+**完成条件：** 输出有来源与适用范围；分歧先隔离，检查题意、输入、oracle 和 reference，不能自动相信较快实现或简单多数投票。性质检查也要区分充分与必要条件：答案一定不小于最大单个元素、不大于全部正数之和，数组没有正数时答案就是最大元素。这是必要条件，落在这个区间里不能证明答案正确。源码补强版的 oracle 库收录了 7 道题的独立 oracle、合法输入生成器和校验器，见[反向补充源码](examples/source-supplements/README.md)。
+
+<a id="test-strength"></a>
 
 ### A5. 测试验收与扩展：答案可信，错解可检出
 
 **人话：** 检查“正确程序能过”只完成了一半；还要拿已确认错误的程序验证这组测试能把它抓出来。每个变异体先找到有效反例，再把它标为错误程序。
 
-| 原五题扩展实例 | 应检查的规则 | 小输入或错误模式 |
-|---|---|---|
-| 最长等值子数组 | 删除数是窗口长度减保留值数量，答案是保留长度 | `[1,2,1], k=0 → 1`；同输入 `k=1 → 2` |
-| 无请求服务器 | `[q-x,q]` 两端包含，按服务器去重计活跃数 | 新增边界例 `[1,2]` 能识别把左端点误排除的解 |
-| 移动弹珠 | 同一位置所有弹珠一起移动，返回占用位置而非数量 | `nums=[1,1,3]`，`moveFrom=[1,3]`，`moveTo=[2,2] → [2]` |
-| 矩阵查询和 | 后赋值覆盖前赋值，行列交叉服从时间顺序 | `n=2, queries=[[0,0,1],[1,0,2],[0,0,3]] → 8` |
-| 最大和查询 | 最大化的是 `nums1[j]+nums2[j]`，同时满足两个阈值 | `nums1=[100,1], nums2=[1,20], queries=[[1,1]] → [101]` |
+LeetCode 53 的几种典型错解，以及能抓住它的输入。2026-10-13 用暴力 Oracle 逐条核对：
 
-最后一个例子针对历史 `meta.response` 中的 `max(sorted_sums[i:])[1]`：tuple 先比较 `nums2`，会偏向 `(20,21)` 而非 `(1,101)`，得到 `[21]`。三个已有样例不能充分约束这一错误模式。另一个重要细节是最长子数组参考解中的 `mx` 可能是历史最大频数，不保证是当前窗口真实最大值：`nums=[1,1,2,3], k=0` 处理到末尾时当前窗口可为 `[2,3]`，`mx` 仍为 2。算法利用不回退的历史最优值求答案，不能据注释声称“当前窗口始终合法”；它是否正确仍需算法论证和对照。
+| 错误模式 | 违反的规则 | 原 3 条 seed 能抓住吗 | 能抓住它的输入 |
+|---|---|---|---|
+| 允许空子数组，初值取 0，即演示的 `wrong_empty` | 子数组必须非空 | 不能，3 条答案都是正数 | `[-3,-2,-5]` 应得 -2，错解得 0 |
+| 直接返回总和，即演示的 `wrong_sum` | 要选一段，不是全部 | 能，seed-1 应得 6，错解得 1 | seed-1 |
+| 只返回最大单个元素 | 最优段可以有多个元素 | 能，seed-1 应得 6，错解得 4 | seed-1、seed-3 |
+| 前缀和做法漏掉空前缀 | 子数组可以从第一个元素开始 | 能，seed-3 应得 23，错解得 18 | seed-2、seed-3 |
+| O(n²) 暴力枚举 | 结果正确，但 n 到 10^5 会超时 | 不能，小输入全对 | 只有大输入加时间上限才能区分；原版 prompt 没给约束，属于题目没说清 |
+
+第一行最值得记：原始 3 条 seed 抓不住「允许空子数组」，所以在原始 Code-R1 数据上这个错解会拿 1.1；补上全负输入后才能抓住。测试数量不等于检出能力，要看覆盖了哪些错误模式。
+
+**Code-R1 的测试有多少。** LeetCodeDataset 的测试是把题面样例解析成断言，再和 doocs/leetcode 题解交叉核对得到的。Code-R1 用到的 1890 题，每题的断言数都等于题面样例数，中位数 2 条、最多 5 条，93% 不超过 3 条。答案可信，覆盖却很薄，上表第一行的错解在整个 LeetCode 部分都可能拿满分。工业界判断测试够不够，看的是能不能抓住确认过的错解：用标好对错的提交衡量测试的准确率，设最少条数的门槛，再专门补边界、对抗和大规模输入。
+
+**补强版的实测。** 源码补强版对全部题目做了变异审计：参考解的单点小改动共 17316 个，样例测试杀死 81%，每题杀死率不到一半的有 99 道。读这个数有两个边界：存活的可能只是等价改动；杀死率高也不等于测试够，LeetCode 53 的 9 个变异体全被杀死，wrong_empty 照样拿满分。补测试按「校验器、参考解、独立 oracle」三道关逐条审核，一致才进 GT；7 道示范题补完后，剩下的存活变异体与 oracle 对拍 200 次全部一致，wrong_empty 也被抓住。详见[反向补充源码](examples/source-supplements/README.md)。
+
+参考解 `f = max(f, 0) + x` 也值得会讲：`f` 是以当前元素结尾的最大子段和，前面累积为负就丢掉重来；`ans` 记录所有 `f` 里的最大值。这是 Kadane 算法的不变量，它解释了为什么扫一遍就够。
 
 **完成条件：** 输入合法、期望结果可信、重复执行稳定；分别报告错误程序检出比例及样本构造方法。该比例衡量给定错误样本集的检出能力，不是全部错误程序的总体检出率。
 
@@ -289,9 +271,9 @@ functional_tests = example["test"] + "\n\ncheck(" + example["entry_point"].strip
 ground_truth = json.dumps({"functional": functional_tests})
 ```
 
-`functional` 包含 `def check(candidate)` 中的 assert，以及最终 `check(Solution().countServers)` 调用。expected output 已嵌在 `== [1,2]` 等断言右边，并没有丢失，也不要求再单独存一个同名字段。`json.dumps()` 外层是字符串，解码后才得到含 `functional` 的字典。
+`functional` 包含 `def check(candidate)` 中的 3 条 assert，以及最终 `check(Solution().maxSubArray)` 调用。expected output 已嵌在 `== 6` 等断言右边，并没有丢失，也不要求再单独存一个同名字段。`json.dumps()` 外层是字符串，解码后才得到含 `functional` 的字典。
 
-贯穿题对应 `check(Solution().maxSubArray)`。构造器只读 `accepted` 的 case，并将各自 input 和 expected output 编成自己的 assert；每条 assert 保留 case_id 的失败提示。隔离记录仍在审核报告中，却不混入 GT。JSON 解码、重新执行正确程序及确认错误程序、比较接受的 case 数与 GT 检查数，是封装后的回归；它检查传输/装配没有弄错，不能替代上一节的答案审核。
+演示版的构造器只读 `accepted` 的 case，并将各自 input 和 expected output 编成自己的 assert；每条 assert 保留 case_id 的失败提示。隔离记录仍在审核报告中，却不混入 GT。JSON 解码、重新执行正确程序及确认错误程序、比较接受的 case 数与 GT 检查数，是封装后的回归；它检查传输/装配没有弄错，不能替代上一节的答案审核。
 
 查看 [prepared_task.json](examples/maximum-subarray/outputs/prepared_task.json) 与 [data_pool.jsonl](examples/maximum-subarray/outputs/data_pool.jsonl)：题意给 actor，Tests/入口给 Verifier，metadata 解释来源和用途。Task Pool 只是这些记录的集合，没有另一种“带 meta 的题目”类型。GT 可以给训练评分接口消费，但本课记录是诊断用途；数据核验完成并不自动证明原评分协议和目标环境已可信。
 
@@ -299,7 +281,7 @@ ground_truth = json.dumps({"functional": functional_tests})
 
 实际样本保存在 `reward_model.ground_truth`，actor 看到的是聊天格式 `prompt`；`extra_info.reference` 是辅助信息，当前 `_compute_score()` 不使用它做代码文本相似度打分。SFT 学习某份目标回答；RLVR 在采样后按行为验收，可以接受与 reference 写法不同的正确解。
 
-**完成条件：** JSON 往返不改变断言；入口存在；至少一条有效检查；可信正确程序能按既定 imports 契约运行。不要因为有 `check()` 函数就接受空测试，也不要把 reference 或隐藏 GT 拼进 actor prompt。
+**完成条件：** JSON 往返不改变断言；入口存在；至少一条有效检查；可信正确程序能按既定 imports 契约运行；测试依赖的辅助函数在判分时都在。Code-R1 不拼原始 `prompt` 前缀，121 道树和链表题因此必然失败，见 [01 的内部审查例子](01_数据理解与GT构建.md#internal-external-review)；补强版已修复，见[反向补充源码](examples/source-supplements/README.md)。不要因为有 `check()` 函数就接受空测试，也不要把 reference 或隐藏 GT 拼进 actor prompt。
 
 <a id="verification"></a>
 
@@ -319,7 +301,9 @@ ground_truth = json.dumps({"functional": functional_tests})
 
 **[Code-R1 实现]** 活跃预处理器合并、打乱数据并导出 `train.parquet` / `test.parquet`；没有在导出前完成上述 policy 难度估计。实际目录名按 `round(len(train_dataset)/1000)` 和数据来源生成，而 `main_grpo.sh` 使用 `DATASET=code-r1-12k`，学习时要核对实际文件路径，不能假设运行预处理后自动匹配脚本。
 
-**完成条件：** 训练和评测文件与协议一致；训练难度筛选可选并带 checkpoint；未验收和 infra 故障样本先隔离。全对或全错不是永久无用，只有在当前组归一化的 outcome 信号上缺少相对差异；KL 等其他梯度项可能仍存在。
+**完成条件：** 训练和评测文件与协议一致；训练难度筛选可选并带 checkpoint；未验收和 infra 故障样本先隔离。源码补强版的选择工具实现了按实测通过率筛题与评测集去重，见[反向补充源码](examples/source-supplements/README.md)。全对或全错不是永久无用，只有在当前组归一化的 outcome 信号上缺少相对差异；KL 等其他梯度项可能仍存在。
+
+<a id="a-reference-answers"></a>
 
 ### 条件分支：采用参考程序求新增输入答案时，分别检查什么？
 
@@ -456,7 +440,7 @@ SFT Cold Start 可以放在 RL 之前，但不是所有 Code RLVR 都需要单�
 
 当前源码的运行关系可记为：`生成 → uid/repeat 对齐与 balance → old/ref logprob → reward → advantage → actor update`。贯穿演示的四个算法候选 `reference / correct_prefix / wrong_empty / wrong_sum` 由教学代码固定提供，得到 `[1.1,1.1,0.1,0.1]`；它们并非模型新 rollout。对它们求 advantage 可以先看清信号怎样传播，之后才在明确模型、Linux 执行环境和预算的条件下进行真实采样。
 
-以 **教学计算** 举例：同一道服务器题生成 4 个回答，格式均合格，其中 2 个测试失败、2 个测试通过。按实际 Code-R1 reward，分数是 `[0.1, 0.1, 1.1, 1.1]`，均值 0.6；按当前 `compute_grpo_outcome_advantage()` 使用的 `torch.std` 样本标准差，标准差约为 0.57735，忽略很小的 epsilon 后，advantage 约为 `[-0.86603, -0.86603, +0.86603, +0.86603]`。这些是手算数值，不是历史训练日志。
+以 **教学计算** 举例：把这四个候选按分数排好，格式都合格，2 个测试失败、2 个通过，分数是 `[0.1, 0.1, 1.1, 1.1]`，均值 0.6；按当前 `compute_grpo_outcome_advantage()` 使用的 `torch.std` 样本标准差，标准差约为 0.57735，忽略很小的 epsilon 后，advantage 约为 `[-0.86603, -0.86603, +0.86603, +0.86603]`。这些是手算数值，不是历史训练日志。
 
 这个例子若改成二值 `[0,0,1,1]`，组标准化后近似相同，因为这里仅作了正比例缩放与平移；但实际 Code-R1 还有格式失败 `-1.1`、管理器异常回填 `0.0`，不能因此把所有情形统称为二值奖励。尤其 `reward > 0` 不是通过条件：测试失败也有 `0.1`。
 
@@ -554,15 +538,13 @@ Reward Worker → Trainer
 | Code-R1 STDIO 评分 | 分别执行输入，比较 `output.strip()` 和 `stdout.strip()` | strip 是具体比较政策，不等于所有题都允许任意空白归一化 |
 | Code-R1 Firejail 后端 | 设置私有环境、进程数、文件数、内存和时间限制；返回退出状态与日志 | 非零退出混合了断言、运行及其他失败，未天然提供细粒度归因 |
 
-**例子：** 服务器参考实现调用 `Counter()`。加原始 prelude 能通过，直接作为自包含 RL 提交却可能 `NameError`；这是提交契约或环境适配问题，不能直接认定算法错误。Python 版本也影响类型注解的求值：本次 Python 3.14 中部分裸实现能过，不能据此保证训练镜像的其他版本也能过。
+**例子，2026-10-13 实测：** LeetCode 53 的参考解签名里有 `List[int]`。拼上原始 prelude 能通过；不拼前缀、作为自包含 RL 提交时，Python 3.12 报 `NameError: name 'List' is not defined`，Python 3.14 却能通过，因为 3.14 把注解改成了延迟求值。这是提交契约或环境适配问题，不能认定算法错误；判分结果还取决于训练镜像的 Python 版本。树和链表题更严重：测试本身调用前缀里的辅助函数，见 [01 的内部审查例子](01_数据理解与GT构建.md#internal-external-review)。
 
-**[2026-10-03 历史核验]** 用原始 parser 与 `_compute_score()`，仅把执行后端换成受控的 Python 子进程后，格式合格的 `import sys; sys.exit(0)` 得到 `1.1`：测试代码排在 candidate 后面，candidate 提前成功退出，后面的 assert 没有执行；评分器只看到 executor 成功。这验证了评分协议缺口，**没有实跑 Firejail / Docker**。当前 Firejail 源码同样按 `returncode == 0` 返回成功，正式后端验收需检查该情况。
-
-新最大子数组和演示也保留这个负控制：`early_exit` 原 scorer 给高分，而逐条完成审计显示没有完成测试。这是固定程序的独立检查，不是受保护的通用协议；未知程序可能伪造普通标记。本课完成原版机制复现、指出缺口之后可以继续离线学习，正式执行未知代码和提出可信能力结论仍需目标环境与判分协议的证据。
+**提前退出的缺口。** LeetCode 53 演示用原始 parser 与 `_compute_score()`，只把执行后端换成受控的本地子进程：格式合格、第二行就 `sys.exit(0)` 的 `early_exit` 得到 1.1。测试代码排在候选代码后面，候选提前以退出码 0 结束，后面的 assert 一条都没执行，评分器只看到执行成功；另做的逐条审计显示它完成的测试数是 0。这验证了评分协议缺口，**没有实跑 Firejail 或 Docker**；当前 Firejail 源码同样只按 `returncode == 0` 判成功，正式后端验收需检查这种情况。这个演示是固定程序的独立检查，不是受保护的通用协议；本课复现原版机制、指出缺口之后可以继续离线学习，正式执行未知代码和提出可信能力结论仍需目标环境与判分协议的证据。源码补强版已经实现受保护的判题协议和结构化沙箱，把这个缺口堵上，见[反向补充源码](examples/source-supplements/README.md)。
 
 **[通用设计]** 高可信验证应由受保护的测试控制方确认测试开始、实际执行数量、完成状态与结果，再给 reward；缺失执行结果不能默认成功。把可伪造的完成字符串与 candidate 放在同一可读写空间，不足以解决问题。通用母版中“candidate 无法读取或篡改隐藏判定依据”是验收目标，当前 functional 拼接实现不能被描述成已经充分满足这一目标。
 
-**本机边界：** 当前会话是 Windows PowerShell；`main_grpo.sh` 和 Firejail 是 Linux 路径，原生 `execution.py` 的时间限制使用 `signal.setitimer/SIGALRM`。本文的小规模审核在 Windows 受控执行已检查的代码，未启动整个原生评测器，也未搭建 Linux GPU 训练环境。部署执行应在与训练一致的 Linux 环境验收，不能用一个 Windows subprocess 代替安全隔离结论。
+**本机边界：** 资料最初在 Windows 上编写，现在在 macOS 上复现。`main_grpo.sh` 和 Firejail 只能在 Linux 上运行，原生 `execution.py` 的时间限制使用 `signal.setitimer/SIGALRM`。本课的小规模审核只在本机受控执行已检查的代码，没有启动整个原生评测器，也没有搭建 Linux GPU 训练环境。部署执行应在与训练一致的 Linux 环境验收，不能用本机的子进程代替安全隔离结论。
 
 需要保证：
 
@@ -667,11 +649,13 @@ $$
 
 对应练习：[指标与 baseline](04_真实训练与独立评测.md#assignment-4-1)、[独立评测与归因](04_真实训练与独立评测.md#assignment-4-3)。
 
-**回流例子：** 最大和查询的历史回答通过样例，却在新增 `[100,1] / [1,20]` 反例上返回 `[21]`。算法 bug 属于 candidate；原测试未抓住它又揭示了覆盖缺口。不能只修一句回答而继续宣称旧测试已充分可靠，也不能用这一诊断题的改进成绩充当未见题泛化。
+**回流例子：** `wrong_empty` 通过了 LeetCode 53 原始的 3 条 seed，却在新增的全负输入 `[-3,-2,-5]` 上返回 0。算法 bug 属于候选；原测试没抓住它，又揭示了测试覆盖缺口，两件事同时成立。回流时要把全负输入补进测试并升测试版本，不能只修这一份回答就宣称旧测试已经可靠，也不能把这道诊断题上的改进当成未见题泛化。
 
 **完成条件：** 用固定协议比较 baseline 与新 checkpoint；单独记录 format/runtime/infra 故障和成本；对修复所用题集与最终报告题集说明隔离边界。来自最终测试的信息若参与数据修复或调参，必须记录它的开发用途，不能无说明地回流后继续当盲测。
 
 具体归因方法在第六部分展开。
+
+<a id="verifier-internals"></a>
 
 # 五、Verifier 的构造与内部执行流程
 
@@ -797,9 +781,9 @@ functional 分支是整体通过/失败，没有逐断言 partial reward；STDIO
 
 **[通用设计]** 建议返回结构化状态和测试完成证据，先区分 candidate 失败与 infra error，再映射 reward。当前接口主要是 bool 与输出日志，源代码也会将部分异常填 0；因此母版的“infra error 有限重试后隔离”是应补齐的设计，不能标成现有完整实现。用 `asyncio.wait_for` 停止等待，也不自动证明底层 executor 线程及它启动的进程已经终止。
 
-**验收例子：** 同一服务器题准备正确解、永远返回 `[-1]*len(queries)` 的错误解、缺少 imports 的提交、无代码块的输出和提前退出程序。检查格式分、正确性分、实际执行和错误分类分别来自哪一层，而不是只看最后一个浮点数。生产级验收还应加入死循环、资源耗尽、服务中断、输出比较与结果伪造等目标后端测试。
+**验收例子：** LeetCode 53 准备一组固定候选：正确解 `reference` 与 `correct_prefix`、允许空子数组的 `wrong_empty`、返回总和的 `wrong_sum`、没有 think/answer 标签的 `bad_format`、提前退出的 `early_exit`；建议再加一份漏写 `from typing import List` 的提交。检查格式分、正确性分、实际执行和错误分类分别来自哪一层，而不是只看最后一个浮点数。生产级验收还应加入死循环、资源耗尽、服务中断、输出比较与结果伪造等目标后端测试。
 
-贯穿演示使用最大子数组和固定候选，复用锁定源码的 parser 与 `_compute_score()`，仅将后端换为已检查程序的本地 subprocess。STDIO 是同题的教学适配，原始语料仍为 function；stdin、expected stdout、actual stdout 也逐条绑定，并按原源码 `.strip()` 规则比较，不能说这是原始 TACO 样本或新建的生产 Sandbox。
+演示复用锁定源码的 parser 与 `_compute_score()`，仅将后端换为已检查程序的本地 subprocess。STDIO 是同题的教学适配，原始语料仍为 function；stdin、expected stdout、actual stdout 也逐条绑定，并按原源码 `.strip()` 规则比较，不能说这是原始 TACO 样本或新建的生产 Sandbox。
 
 对应练习：[评分真值表与 STDIO 对照](02_Verifier与任务池验收.md#assignment-2-1)、[条件变化与边界](02_Verifier与任务池验收.md#assignment-2-2)。
 
@@ -819,7 +803,7 @@ functional 分支是整体通过/失败，没有逐断言 partial reward；STDIO
 
 如果生成结果被截断，但代码已经完整且符合预先规定的提交格式，可以按固定规则继续验证。不能根据最终测试结果临时调整截断处理规则。
 
-对于 INFRA_ERROR，应配置 `max_retries`。达到上限仍然失败的样本不进入正常 Reward 训练；如果错误率超过预设阈值，则暂停相关 Worker 或任务队列并排查。
+对于 INFRA_ERROR，应配置 `max_retries`。达到上限仍然失败的样本不进入正常 Reward 训练；如果错误率超过预设阈值，则暂停相关 Worker 或任务队列并排查。源码补强版的奖励管理器 `prime_plus` 按这个思路实现：判题故障先重试，仍失败的整组作废，并输出故障统计，见[反向补充源码](examples/source-supplements/README.md)。
 
 <a id="failure-attribution"></a>
 
@@ -964,16 +948,17 @@ $$
 
 因此需要通过边界测试、随机测试、独立 Oracle 和 Held-out Evaluation 提高验证可信性。
 
-## 4. 五题中怎样避免把不同失败混为一谈
+## 4. 同一道题怎样避免把不同失败混为一谈
 
 | 现象 | 先检查什么 | 应得出的有限结论 |
 |---|---|---|
-| 服务器历史回答逐查询扫描全部日志 | 样例逻辑、算法复杂度、actor 可见约束、固定环境的大输入 | 其复杂度为 `O(m log m + qm)`，其中 m 是日志数、q 是查询数；预期规模问题不等于本次已经测出超时 |
-| 矩阵历史回答反向遍历但每次调用 `list.count(-1)` | 是不是只统计首次行列赋值，以及 n 的上限 | 至多 2n 次线性扫描，复杂度上界为 `O(Q+n^2)`；来源回答声称该复杂度是题目要求，没有证据支持 |
-| 最大和历史回答选错 tuple | 合法反例和独立枚举结果 | 可以确认该表达式选错目标；完整程序还依赖 `sortedcontainers`，其部署与整体运行另验收 |
-| reference 缺少 Counter 或 bisect imports | 原生 prelude 与 RL 自包含协议 | 先归为运行契约适配，不能仅据 NameError 判为算法错 |
-| 最长子数组的 `mx` 不再是当前最大频数 | 实际算法不变量、暴力对照与证明 | 注释或解释可错而算法仍正确；不应因“窗口当前不合法”直接重写 reference |
-| 已训练 v2 的五题在 v1 test 得高分 | 跨版本题目身份和使用协议 | 结果可能反映已见题能力；不是未见题性能的证据 |
+| `wrong_empty` 通过原 3 条 seed，却在全负输入上失败 | 原测试覆盖了哪些错误模式 | 算法 bug 属于候选，原测试没抓住是覆盖缺口；两者同时成立 |
+| 一条测试把 `[-3,-2,-5]` 配成 6，正确解反而失败 | 对该输入独立枚举 | 测试数据错误：隔离这一行、保留同输入的正确行，不能据此惩罚正确程序 |
+| 参考解不拼前缀时报 `NameError: List` | 原生 prelude 与 RL 自包含协议；运行环境的 Python 版本 | 运行契约问题，不是算法错；Python 3.14 下同一份代码能通过 |
+| 树和链表题的回答全组 0.1 | 测试依赖的辅助函数判分时是否都在 | Code-R1 不拼前缀造成的执行契约问题，不是模型不会做 |
+| `early_exit` 得 1.1 | 测试是否真的执行完 | 判分协议缺口，不是模型能力 |
+| O(n²) 暴力在大输入上超时 | 题面是否给了约束，时间上限是否绑定固定环境 | 原版 prompt 没给约束，先算题目没说清，不直接判模型错 |
+| 用 v2 训练过的题在 v1 test 上得高分 | 跨版本题目身份和使用协议 | 结果可能反映已见题能力，不是未见题性能的证据 |
 
 确定性 correctness 测试与性能测试也要分开。时间上限取决于固定环境、输入规模、硬件和并发，不能任意缩短超时来制造错误解。暴力 Oracle 在小输入上是可信工具，在最大规模上慢并不否定小输入结果。
 
@@ -981,43 +966,45 @@ $$
 
 <a id="historical-evidence"></a>
 
-# 七、2026-10-03 历史核验结果与证据边界
+# 七、证据边界、历史归档与来源
 
-## 1. 已检查与已执行的内容
+## 1. 本课实际执行过什么
 
-**[2026-10-03 历史核验]** 在 Windows、本地 Python `3.14.6` 上，对旧五条已经检查过的参考代码和受控探针进行小规模执行；没有执行任意新模型提交，也没有启动训练。检查了五个 JSONL 文件的严格解析，并以 task_id 读取目标五题。这些数字属于旧五题，不是新 Hot 100 演示的核验结果。
+下表结果均于 2026-10-13 在 macOS、Python 3.12 实跑得到；前三行由 `run_demo.py all` 生成，后两行是单独的对照。
 
-| 检查 | 本次结果 | 能说明什么 |
+| 检查 | 结果 | 能说明什么 |
 |---|---|---|
-| 本地数据文件记录数 | v1 train=1570、v1 test=175；v2 rl=945、v2 sft=945、v2 test=200 | 是当前文件的行记录数，不是最终过滤后的 12K 训练池数量 |
-| 目标五题 Schema 与 Python AST | 5 条均可解析；assert 总数 11 | 字段与语法可读，不单独证明正确性 |
-| reference + 原始 prelude，执行 seed tests | 五题通过 11 条原有断言 | 仅证明这些输入上的执行结果符合已有测试 |
-| 独立暴力对照，随机种子 `20261003` | 每题 200 组合法小输入，合计 1000 组；全部一致 | 有限随机对照，没有覆盖最大规模和所有输入 |
-| 最长子数组额外穷举对照 | 长度 1—6，值域 `1..min(n,3)`，`k=0..n`，7088 组；全部一致 | 对该小域额外提高可信度，不是完整正确性证明 |
-| 服务器新增边界例 | reference、暴力 Oracle 均为 `[1,2]` | 左端点闭区间例已实际核对 |
-| 最大和历史错误表达式 | 对 tuple 列表复现 `[21]`，独立枚举为 `[101]` | 验证表达式语义；未执行含 SortedList 依赖的完整历史程序 |
-| 前四题历史 response 的原始 seed | 通过对应的 8 条 assert | 保存的回答可以通过样例，但没有证明覆盖与复杂度满足全部要求 |
-| 无原始 prelude 的 reference | 最长子数组/服务器题因 Counter 缺失失败，最大和因 bisect_left 缺失失败；另外两题在本 Python 版本通过 | 证明这次的运行前缀差异；其他 Python 版本另验收 |
-| 原始 scorer + 受控 subprocess backend | bad format=-1.1，wrong answer=0.1，正确解=1.1，提前退出=1.1 | 映射及提前退出缺口已复现；不是生产执行后端验收 |
+| 本地数据文件记录数 | v1 train=1570、v1 test=175；v2 rl=945、v2 sft=945、v2 test=200 | 文件行数，不是最终过滤后的 12K 训练池数量 |
+| LeetCode 53 逐条测试审核 | 8 条接受、7 条隔离；780 个小数组与暴力枚举全部一致 | 有限小域的对照，不是全输入正确性证明 |
+| 原 scorer 加受控本地子进程 | `bad_format`=-1.1，两个错解=0.1，两个正确解=1.1，`early_exit`=1.1 | 奖励映射与提前退出缺口已复现；不是生产执行后端验收 |
+| 不拼前缀运行参考解 | Python 3.12 报 `NameError: List`，Python 3.14 通过 | 运行前缀和 Python 版本都会改变判分 |
+| 树和链表题的前缀依赖 | 1890 道 LeetCode 训练题中 121 道必然失败；v2 test 0/200 | GT 不拼前缀造成的系统性假阴性 |
+| 反向补充：GT 执行契约，2026-10-14 | 补强版下 121 题全部从 0.1 变成 1.1；剩下 14 题因缺第三方库失败，1 题随哈希种子时过时不过 | 前缀依赖已修复；其余两类分别属于运行环境和 verifier，见[反向补充源码](examples/source-supplements/README.md) |
+| 反向补充：测试强度审计，2026-10-14 | 2014 题、17316 个变异体，样例测试杀死 81%；按测试条数从 1 条的 80% 升到 5 条的 87% | 样例测试对参考解附近的错误检出率尚可，但不能说明对远处错误够用 |
+| 反向补充：测试补充与逐条审核，2026-10-14 | 7 道示范题补完后剩余存活变异体对拍全部一致；LeetCode 53 的 wrong_empty 从 1.1 变成 0.1 | 用独立 oracle 核对后补的测试确实提高了检出能力；疑似等价只靠对拍，不是证明 |
+| 反向补充：受保护判题协议与沙箱，2026-10-14 | 提前退出、os._exit、伪造完成帧、读取数据文件都判 0.1；沙箱禁网、禁写工作目录外、禁读仓库，超时后子进程被回收；word-ladder-ii 改用忽略外层顺序的比较后 8 次全过 | 判题结论由判分方得出；macOS 的 sandbox-exec 只用于本机开发，训练仍用 firejail |
+| 反向补充：判题故障策略与数据选择，2026-10-14 | 同组一条判题故障时，原版 advantage 为 +0.5、+0.5、+0.5、-1.5，补强版整组为 0；与 v1 test 去重找到 61 对同题号和 3 对措辞重叠 | 故障策略的纯逻辑已测，奖励管理器整体待 Linux 验证；难度筛选需要真实采样的通过率 |
 
-总对照输入组数为 **8088 = 7088 + 5×200**，与五题已有的 11 条 seed assert 分开统计。随机对照为独立实现与 reference 的逐例比较，输入深拷贝后执行，避免原地排序影响结果；它不是训练样本数量，也不是模型评测通过率。
-
-已找回的脚本、报告与当时基线文档见 [只读历史归档](examples/history-20261003/README.md)。原执行报告保留原字节；后续重新运行属于新核验，不能覆盖旧报告或冒充旧执行。新最大子数组和演示及逐条错配处理见 [2026-10-09 演示资产](examples/maximum-subarray/README.md)。
+运行入口与完整结果见 [LeetCode 53 演示资产](examples/maximum-subarray/README.md) 和它生成的 [运行报告](examples/maximum-subarray/outputs/report.json)。
 
 ## 2. 没有越过的证据边界
 
-本次没有进行完整 Oracle 形式证明、最大规模性能测试、Firejail/Docker 安全与并发验收、真实模型 rollout、GPU 参数更新或作者训练效果复现。文中的扩展设计不代表相应 pipeline 已实现。源码证据只覆盖上述锁定提交；一手论文和项目文章只支持其公开陈述，不支持将本母版认定为某公司的完整内部流程。
+本课没有做完整 Oracle 形式证明、最大规模性能测试、Firejail 或 Docker 的安全与并发验收、真实模型 rollout、GPU 参数更新或作者训练效果复现。文中的扩展设计不代表相应 pipeline 已实现。源码证据只覆盖页首锁定的提交；一手论文和项目文章只支持其公开陈述，不支持把本框架认定为某家公司的完整内部流程。
 
-原始五题已被用于人工理解和诊断，因此本文对它们的演示结果不当作未见 benchmark。后续要跑实验，先决定使用 v1 还是 v2 或其他独立协议，再重新核对跨来源题目家族与 final test 边界。
+LeetCode 53 已被用于讲解、调试和扩充测试，所以它在本课只作诊断题，演示结果不当作未见 benchmark。要跑真实实验，先决定用 v1、v2 还是其他独立协议，再核对跨来源题目家族与最终测试边界。
 
-## 3. 直接来源与版本定位
+## 3. 旧版资料的历史归档
+
+资料的早期版本曾用另外五道 LeetCode 题做过一次小规模核验。那次核验的脚本、报告和当时的文档按原字节保存在 [只读历史归档](examples/history-20261003/README.md)，不属于当前贯穿题，也不再作为正文例子；当前正文的所有机制例子都改用 LeetCode 53。不要在归档目录里直接运行旧脚本，它会覆盖旧报告。
+
+## 4. 直接来源与版本定位
 
 - 本地 [LeetCode v1 test](../LeetCodeDataset/data/LeetCodeDataset-v1-test-problems.jsonl) 与 [v2 RL](../LeetCodeDataset/data/LeetCodeDataset-v2-rl-problems.jsonl) / [v2 SFT](../LeetCodeDataset/data/LeetCodeDataset-v2-sft-problems.jsonl) / [v2 test](../LeetCodeDataset/data/LeetCodeDataset-v2-test-problems.jsonl)：字段、版本位置与运行实例。
 - 本地 [coder1.py](../examples/data_preprocess/coder1.py)：`minimize_stdio()`、`taco()`、`leetcode2k()` 和 Parquet 导出；核对版本为页首 Code-R1 commit，不以在线 main 的未来内容代替本地证据。
 - 本地 [Code-R1 scorer](../verl/utils/reward_score/coder1/__init__.py)、[Firejail executor](../verl/utils/reward_score/coder1/firejail_exec.py)、[PrimeRewardManager](../verl/workers/reward_manager/prime.py)：格式、GT 消费、执行成功定义、分数和异常兜底。
 - 本地 [原生执行器](../LeetCodeDataset/leetcote/execution.py)、[原生评测器](../LeetCodeDataset/leetcote/evaluate.py)：imports 前缀、时间限制、候选统计与 pass@k。
 - 本地 [ray_trainer.py](../verl/trainer/ppo/ray_trainer.py)、[core_algos.py](../verl/trainer/ppo/core_algos.py)、[FSDP-vLLM manager](../verl/workers/sharding_manager/fsdp_vllm.py)：奖励张量、uid 分组、样本标准差、概率比裁剪与权重同步。
-- [LeetCode 官方 Maximum Sum Queries 题面](https://leetcode.com/problems/maximum-sum-queries/description/)：当前公开页也有索引表达混用；据题意、样例和 Python 二元素数据结构明确适配。
+- [LeetCode 53 官方题面](https://leetcode.com/problems/maximum-subarray/description/)：题意与约束的外部依据；演示追加的约束据此补写。
 - [DeepSeek-R1 v1](https://arxiv.org/html/2501.12948v1#S2.SS2.SSS2)、[Qwen3-Coder 官方文章](https://qwenlm.github.io/blog/qwen3-coder/)：分别支持规则正确性奖励与测试扩展的公开方法，不用于替代本仓库的实际执行证据。
 
 # 最终：Code RLVR 端到端闭环

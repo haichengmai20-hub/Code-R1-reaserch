@@ -1,0 +1,583 @@
+{
+  "generator": "scenario_yourplan.py",
+  "nature": "推演：按用户在 05 带学时的决定生成；控制台无逐样本判分块（prime_plus 不打印），rollout 落盘里的代码经真实判分代码验证",
+  "runs": [
+    "your-01",
+    "your-02"
+  ],
+  "n": 8,
+  "max_response_length": 6144,
+  "filter": {
+    "sampled_with": "your-01/global_step_200",
+    "samples_per_task": 8,
+    "n_source": 1889,
+    "all_pass_removed": 158,
+    "all_fail_removed": 124,
+    "kept": 1607,
+    "val_split": 200,
+    "train_rows": 1407,
+    "batches_per_epoch": 87,
+    "p_filtered_at_start": 0.5118,
+    "all_pass_rate_at_200": 0.0838,
+    "all_fail_rate_at_200": 0.0655
+  },
+  "your-01": {
+    "steps": [
+      1,
+      200
+    ],
+    "console_physical_lines": 983,
+    "rollout_dumps": {
+      "65": 128,
+      "200": 128
+    },
+    "wall_hours": 21.2,
+    "gpu_cost_cny": 847,
+    "started": "2026-10-18T08:00:00",
+    "finished": "2026-10-19T05:11:14.200000",
+    "step_end_times": {
+      "64": "10-18 14:29:23",
+      "65": "10-18 14:35:18",
+      "66": "10-18 14:41:19",
+      "67": "10-18 14:46:58",
+      "128": "10-18 20:54:35",
+      "129": "10-18 21:01:18",
+      "130": "10-18 21:08:08",
+      "131": "10-18 21:14:02",
+      "192": "10-19 04:08:24",
+      "193": "10-19 04:16:00",
+      "194": "10-19 04:23:30",
+      "200": "10-19 05:11:14"
+    },
+    "mean_step_s": 381.4,
+    "mean_gen_s": 119.7,
+    "mean_update_s": 147.1,
+    "first": {
+      "critic/rewards/mean": -0.278125,
+      "response_length/mean": 1892.3,
+      "response_length/clip_ratio": 0.1415,
+      "actor/entropy": 1.1358,
+      "actor/kl_loss": 0.000882,
+      "scenario/format_fail_rate": 0.4486,
+      "scenario/pass_rate_given_format": 0.2818,
+      "scenario/group_all_fail": 0.2637
+    },
+    "final": {
+      "critic/rewards/mean": 0.56875,
+      "response_length/mean": 1472.9,
+      "response_length/clip_ratio": 0.0312,
+      "actor/kl_loss": 0.081816,
+      "actor/entropy": 0.2954,
+      "actor/pg_clipfrac": 0.0353,
+      "scenario/format_fail_rate": 0.04,
+      "scenario/pass_rate_given_format": 0.54,
+      "scenario/group_all_pass": 0.0956,
+      "scenario/group_all_fail": 0.0569
+    },
+    "val_first_last": [
+      -0.166,
+      0.559
+    ],
+    "val_pass_first_last": [
+      0.25,
+      0.495
+    ],
+    "val_max": [
+      0.559,
+      200
+    ],
+    "neutralized_groups_total": 17,
+    "io_event": {
+      "64": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.457813
+      },
+      "65": {
+        "infra_raw": 15,
+        "after_retry": 8,
+        "neutralized_groups": 4,
+        "reward": 0.342188
+      },
+      "66": {
+        "infra_raw": 10,
+        "after_retry": 5,
+        "neutralized_groups": 2,
+        "reward": 0.36875
+      },
+      "67": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.426563
+      },
+      "128": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.50625
+      },
+      "129": {
+        "infra_raw": 14,
+        "after_retry": 7,
+        "neutralized_groups": 3,
+        "reward": 0.410938
+      },
+      "130": {
+        "infra_raw": 9,
+        "after_retry": 4,
+        "neutralized_groups": 2,
+        "reward": 0.4625
+      },
+      "131": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.529688
+      },
+      "192": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.553125
+      },
+      "193": {
+        "infra_raw": 15,
+        "after_retry": 8,
+        "neutralized_groups": 4,
+        "reward": 0.4125
+      },
+      "194": {
+        "infra_raw": 8,
+        "after_retry": 4,
+        "neutralized_groups": 2,
+        "reward": 0.479688
+      },
+      "200": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.56875
+      }
+    },
+    "attribution": [
+      {
+        "from": 1,
+        "to": 64,
+        "d_reward": 0.736,
+        "format_part": 0.596,
+        "correctness_part": 0.147,
+        "residual": -0.007,
+        "format_share": 0.81
+      },
+      {
+        "from": 64,
+        "to": 128,
+        "d_reward": 0.048,
+        "format_part": 0.01,
+        "correctness_part": 0.033,
+        "residual": 0.006,
+        "format_share": 0.21
+      },
+      {
+        "from": 128,
+        "to": 200,
+        "d_reward": 0.062,
+        "format_part": 0.0,
+        "correctness_part": 0.067,
+        "residual": -0.005,
+        "format_share": 0.01
+      }
+    ]
+  },
+  "your-02": {
+    "steps": [
+      201,
+      400
+    ],
+    "console_physical_lines": 907,
+    "rollout_dumps": {
+      "201": 128,
+      "400": 128
+    },
+    "wall_hours": 26.1,
+    "gpu_cost_cny": 1043,
+    "started": "2026-10-20T14:00:00",
+    "finished": "2026-10-21T16:04:05.700000",
+    "step_end_times": {
+      "201": "10-20 14:06:41",
+      "256": "10-20 20:53:03",
+      "257": "10-20 21:00:35",
+      "320": "10-21 05:14:22",
+      "321": "10-21 05:21:59",
+      "384": "10-21 13:51:06",
+      "385": "10-21 13:58:50",
+      "400": "10-21 16:04:05"
+    },
+    "mean_step_s": 469.2,
+    "mean_gen_s": 153.2,
+    "mean_update_s": 185.6,
+    "first": {
+      "critic/rewards/mean": 0.553125,
+      "response_length/mean": 1432.4,
+      "response_length/clip_ratio": 0.0239,
+      "actor/entropy": 0.2937,
+      "actor/kl_loss": 0.089118,
+      "scenario/format_fail_rate": 0.0399,
+      "scenario/pass_rate_given_format": 0.5206,
+      "scenario/group_all_fail": 0.0361
+    },
+    "final": {
+      "critic/rewards/mean": 0.664062,
+      "response_length/mean": 1782.9,
+      "response_length/clip_ratio": 0.023,
+      "actor/kl_loss": 0.100584,
+      "actor/entropy": 0.2774,
+      "actor/pg_clipfrac": 0.0275,
+      "scenario/format_fail_rate": 0.0314,
+      "scenario/pass_rate_given_format": 0.6192,
+      "scenario/group_all_pass": 0.1041,
+      "scenario/group_all_fail": 0.0152
+    },
+    "val_first_last": [
+      0.634,
+      0.736
+    ],
+    "val_pass_first_last": [
+      0.57,
+      0.66
+    ],
+    "val_max": [
+      0.741,
+      368
+    ],
+    "neutralized_groups_total": 0,
+    "io_event": {
+      "201": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.553125
+      },
+      "256": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.584375
+      },
+      "257": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.607813
+      },
+      "320": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.632812
+      },
+      "321": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.640625
+      },
+      "384": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.640625
+      },
+      "385": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.648438
+      },
+      "400": {
+        "infra_raw": 0,
+        "after_retry": 0,
+        "neutralized_groups": 0,
+        "reward": 0.664062
+      }
+    },
+    "attribution": [
+      {
+        "from": 201,
+        "to": 256,
+        "d_reward": 0.031,
+        "format_part": 0.007,
+        "correctness_part": 0.03,
+        "residual": -0.006,
+        "format_share": 0.23
+      },
+      {
+        "from": 256,
+        "to": 320,
+        "d_reward": 0.048,
+        "format_part": 0.005,
+        "correctness_part": 0.034,
+        "residual": 0.009,
+        "format_share": 0.1
+      },
+      {
+        "from": 320,
+        "to": 400,
+        "d_reward": 0.031,
+        "format_part": 0.003,
+        "correctness_part": 0.031,
+        "residual": -0.003,
+        "format_share": 0.09
+      }
+    ]
+  },
+  "eval": {
+    "models": [
+      "base",
+      "your-01",
+      "your-02"
+    ],
+    "checkpoints": {
+      "your-01": "global_step_200",
+      "your-02": "global_step_400"
+    },
+    "note": "dev = v2 test 200 题（your-01 训练中也用它验证；your-02 改用切出的 200 题验证，dev 只在最后评）；lcb = LiveCodeBench 2025-05-01 以后 142 题 held-out，只评一次、不用于选 checkpoint",
+    "dev": {
+      "n": 200,
+      "greedy_pass1": {
+        "base": 0.38,
+        "your-01": 0.575,
+        "your-02": 0.605
+      },
+      "greedy_pass_count": {
+        "base": 76,
+        "your-01": 115,
+        "your-02": 121
+      },
+      "greedy_format_fail": {
+        "base": 0.185,
+        "your-01": 0.025,
+        "your-02": 0.02
+      },
+      "greedy_by_difficulty": {
+        "base": {
+          "easy": {
+            "pass1": 0.4706,
+            "n": 51
+          },
+          "hard": {
+            "pass1": 0.1915,
+            "n": 47
+          },
+          "medium": {
+            "pass1": 0.4216,
+            "n": 102
+          }
+        },
+        "your-01": {
+          "easy": {
+            "pass1": 0.7451,
+            "n": 51
+          },
+          "hard": {
+            "pass1": 0.2553,
+            "n": 47
+          },
+          "medium": {
+            "pass1": 0.6373,
+            "n": 102
+          }
+        },
+        "your-02": {
+          "easy": {
+            "pass1": 0.7843,
+            "n": 51
+          },
+          "hard": {
+            "pass1": 0.2979,
+            "n": 47
+          },
+          "medium": {
+            "pass1": 0.6569,
+            "n": 102
+          }
+        }
+      },
+      "sampled": {
+        "base": {
+          "pass@1_by_seed": {
+            "1": 0.3588,
+            "2": 0.3431,
+            "3": 0.3531
+          },
+          "pass@1_mean": 0.3517,
+          "pass@1_std": 0.0079,
+          "pass@8_mean": 0.7683
+        },
+        "your-01": {
+          "pass@1_by_seed": {
+            "1": 0.5469,
+            "2": 0.5444,
+            "3": 0.5525
+          },
+          "pass@1_mean": 0.5479,
+          "pass@1_std": 0.0042,
+          "pass@8_mean": 0.87
+        },
+        "your-02": {
+          "pass@1_by_seed": {
+            "1": 0.6281,
+            "2": 0.6312,
+            "3": 0.6106
+          },
+          "pass@1_mean": 0.6233,
+          "pass@1_std": 0.0111,
+          "pass@8_mean": 0.8983
+        }
+      },
+      "paired_greedy": {
+        "your-01_vs_base": {
+          "win": 41,
+          "loss": 2,
+          "same": 157,
+          "net": 39,
+          "net_points": 19.5
+        },
+        "your-02_vs_base": {
+          "win": 46,
+          "loss": 1,
+          "same": 153,
+          "net": 45,
+          "net_points": 22.5
+        },
+        "your-02_vs_your-01": {
+          "win": 9,
+          "loss": 3,
+          "same": 188,
+          "net": 6,
+          "net_points": 3.0
+        }
+      }
+    },
+    "lcb": {
+      "n": 142,
+      "greedy_pass1": {
+        "base": 0.1338,
+        "your-01": 0.2606,
+        "your-02": 0.3169
+      },
+      "greedy_pass_count": {
+        "base": 19,
+        "your-01": 37,
+        "your-02": 45
+      },
+      "greedy_format_fail": {
+        "base": 0.2042,
+        "your-01": 0.0211,
+        "your-02": 0.0211
+      },
+      "greedy_by_difficulty": {
+        "base": {
+          "medium": {
+            "pass1": 0.0656,
+            "n": 61
+          },
+          "hard": {
+            "pass1": 0.0526,
+            "n": 38
+          },
+          "easy": {
+            "pass1": 0.3023,
+            "n": 43
+          }
+        },
+        "your-01": {
+          "medium": {
+            "pass1": 0.1475,
+            "n": 61
+          },
+          "hard": {
+            "pass1": 0.0789,
+            "n": 38
+          },
+          "easy": {
+            "pass1": 0.5814,
+            "n": 43
+          }
+        },
+        "your-02": {
+          "medium": {
+            "pass1": 0.2295,
+            "n": 61
+          },
+          "hard": {
+            "pass1": 0.1316,
+            "n": 38
+          },
+          "easy": {
+            "pass1": 0.6047,
+            "n": 43
+          }
+        }
+      },
+      "sampled": {
+        "base": {
+          "pass@1_by_seed": {
+            "1": 0.1065,
+            "2": 0.1039,
+            "3": 0.096
+          },
+          "pass@1_mean": 0.1021,
+          "pass@1_std": 0.0055,
+          "pass@8_mean": 0.3662
+        },
+        "your-01": {
+          "pass@1_by_seed": {
+            "1": 0.2333,
+            "2": 0.2553,
+            "3": 0.2262
+          },
+          "pass@1_mean": 0.2383,
+          "pass@1_std": 0.0152,
+          "pass@8_mean": 0.5962
+        },
+        "your-02": {
+          "pass@1_by_seed": {
+            "1": 0.2984,
+            "2": 0.2729,
+            "3": 0.2852
+          },
+          "pass@1_mean": 0.2855,
+          "pass@1_std": 0.0128,
+          "pass@8_mean": 0.6925
+        }
+      },
+      "paired_greedy": {
+        "your-01_vs_base": {
+          "win": 20,
+          "loss": 2,
+          "same": 120,
+          "net": 18,
+          "net_points": 12.7
+        },
+        "your-02_vs_base": {
+          "win": 26,
+          "loss": 0,
+          "same": 116,
+          "net": 26,
+          "net_points": 18.3
+        },
+        "your-02_vs_your-01": {
+          "win": 9,
+          "loss": 1,
+          "same": 132,
+          "net": 8,
+          "net_points": 5.6
+        }
+      }
+    }
+  },
+  "plots": true
+}

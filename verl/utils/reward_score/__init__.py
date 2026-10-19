@@ -33,6 +33,10 @@ def _default_compute_score(data_source, solution_str, ground_truth, extra_info=N
     elif data_source in ['code']:
         from . import coder1
         res = coder1.compute_score(solution_str, ground_truth, extra_info=extra_info)
+    elif data_source in ['code_plus']:
+        # 反向补充版判分器：原版 coder1 不变，只补学习资料指出的缺口，见 coder1_plus/__init__.py。
+        from . import coder1_plus
+        res = coder1_plus.compute_score(solution_str, ground_truth, extra_info=extra_info)
     elif data_source in ['hiyouga/geometry3k']:
         from . import geo3k
         res = geo3k.compute_score(solution_str, ground_truth)

@@ -4,10 +4,10 @@
 
 **阅读职责：** 本页说明固定演示的来源与结果；学生实际变更按[操作说明](EXERCISES.md)，提交后按[答案/评分](ANSWERS.md)自检。新 [practice.py](practice.py) 不使用演示固定8/7限制，不覆盖本页outputs；[mechanism_lab.py](mechanism_lab.py)补概率与梯度toy。先按阶段调用函数，不必先通读整个演示实现。
 
-在 `code-r1/` 目录运行，Python 3.10+，仅用标准库和 CPU：
+在仓库根目录运行，需要 Python 3.10+，仅用标准库和 CPU；`$PY` 的设置见[资料首页](../../README.md#run-setup)：
 
-```powershell
-python RLVR学习资料/examples/maximum-subarray/run_demo.py all
+```bash
+$PY -B RLVR学习资料/examples/maximum-subarray/run_demo.py all
 ```
 
 也支持 `prepare`、`verify`、`score`、`advantage`、`evaluate`。每个命令重新生成其所需的全部前置阶段；例如 `score` 会先准备并核验数据，`evaluate` 执行完整流水线。输出固定在本目录的 `outputs/`，后一次运行会更新同名演示产物。
@@ -66,7 +66,7 @@ STDIO 部分是**同题教学适配**：stdin 为一行 JSON 数组，expected s
 
 所选 GT 下 4 个算法候选正确率 **2/4=50%**，meanReward **约 0.6**；从此有限受控池无放回均匀选取时，`pass@1=0.5`、`pass@2=5/6`、`pass@3=pass@4=1`。这不是模型采样、真实泛化或训练效果。报告也单独汇总包含 2 个协议负控制的 6 候选池，correctness 与 scorer 成功信号分别计算。
 
-已测 Python 3.14.6。标准库数值翻译未运行 torch，也不保证与 float32 位级一致。780 个小数组和 8 个诊断 case 不构成对全部合法输入的证明；本地 subprocess 无操作系统安全隔离，不能扩展为未知代码执行器。
+作者在 Windows、Python 3.14.6 验证，2026-10-13 在 macOS、Python 3.12.15 复跑通过。标准库数值翻译未运行 torch，也不保证与 float32 位级一致。780 个小数组和 8 个诊断 case 不构成对全部合法输入的证明；本地 subprocess 无操作系统安全隔离，不能扩展为未知代码执行器。
 
 ## 作者验证证据
 

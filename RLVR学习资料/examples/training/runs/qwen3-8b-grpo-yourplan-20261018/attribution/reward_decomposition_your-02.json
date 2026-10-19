@@ -1,0 +1,29 @@
+[
+  {
+    "from": 201,
+    "to": 256,
+    "d_reward": 0.031,
+    "format_part": 0.007,
+    "correctness_part": 0.03,
+    "residual": -0.006,
+    "format_share": 0.23
+  },
+  {
+    "from": 256,
+    "to": 320,
+    "d_reward": 0.048,
+    "format_part": 0.005,
+    "correctness_part": 0.034,
+    "residual": 0.009,
+    "format_share": 0.1
+  },
+  {
+    "from": 320,
+    "to": 400,
+    "d_reward": 0.031,
+    "format_part": 0.003,
+    "correctness_part": 0.031,
+    "residual": -0.003,
+    "format_share": 0.09
+  }
+]

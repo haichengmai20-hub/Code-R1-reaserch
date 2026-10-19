@@ -1,0 +1,78 @@
+{
+  "run-01": [
+    {
+      "from": 1,
+      "to": 64,
+      "d_reward": 0.802,
+      "format_part": 0.678,
+      "correctness_part": 0.122,
+      "residual": 0.002,
+      "format_share": 0.85
+    },
+    {
+      "from": 64,
+      "to": 128,
+      "d_reward": 0.087,
+      "format_part": 0.014,
+      "correctness_part": 0.076,
+      "residual": -0.003,
+      "format_share": 0.16
+    },
+    {
+      "from": 128,
+      "to": 192,
+      "d_reward": 0.043,
+      "format_part": 0.001,
+      "correctness_part": 0.042,
+      "residual": 0.0,
+      "format_share": 0.01
+    },
+    {
+      "from": 192,
+      "to": 320,
+      "d_reward": 0.035,
+      "format_part": 0.0,
+      "correctness_part": 0.036,
+      "residual": -0.001,
+      "format_share": 0.0
+    }
+  ],
+  "run-02": [
+    {
+      "from": 1,
+      "to": 64,
+      "d_reward": 0.652,
+      "format_part": 0.511,
+      "correctness_part": 0.14,
+      "residual": 0.0,
+      "format_share": 0.78
+    },
+    {
+      "from": 64,
+      "to": 128,
+      "d_reward": 0.098,
+      "format_part": 0.009,
+      "correctness_part": 0.091,
+      "residual": -0.002,
+      "format_share": 0.1
+    },
+    {
+      "from": 128,
+      "to": 192,
+      "d_reward": 0.082,
+      "format_part": 0.001,
+      "correctness_part": 0.081,
+      "residual": 0.0,
+      "format_share": 0.01
+    },
+    {
+      "from": 192,
+      "to": 320,
+      "d_reward": 0.051,
+      "format_part": 0.0,
+      "correctness_part": 0.054,
+      "residual": -0.003,
+      "format_share": 0.0
+    }
+  ]
+}

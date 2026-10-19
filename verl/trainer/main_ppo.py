@@ -107,6 +107,10 @@ def main_task(config, compute_score=None):
     elif reward_manager_name == 'prime':
         from verl.workers.reward_manager import PrimeRewardManager
         reward_manager_cls = PrimeRewardManager
+    elif reward_manager_name == 'prime_plus':
+        # 反向补充版：判题故障先重试，仍失败按 uid 整组作废，见 verl/workers/reward_manager/infra_policy.py。
+        from verl.workers.reward_manager.prime_plus import PrimePlusRewardManager
+        reward_manager_cls = PrimePlusRewardManager
     else:
         raise NotImplementedError
     reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=0, compute_score=compute_score)

@@ -1,0 +1,7 @@
+set,comparison,win,loss,same,net,net_points
+dev,run-01_vs_base,49,2,149,47,23.5
+dev,run-02_vs_base,52,1,147,51,25.5
+dev,run-02_vs_run-01,12,8,180,4,2.0
+lcb,run-01_vs_base,18,2,122,16,11.3
+lcb,run-02_vs_base,26,0,116,26,18.3
+lcb,run-02_vs_run-01,11,1,130,10,7.0
