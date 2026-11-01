@@ -15,6 +15,7 @@
 | 5 | 沙箱：执行结果分成编译错误、运行错误、超时、基础设施错误等状态；记录耗时；超时后确保子进程被清理；本机开发另配一个用 macOS sandbox-exec 禁网、限写的隔离后端，Linux 训练仍用 firejail。范围已经用户确认 | [主框架第三章](../../RLVR工业流程.md#execution-boundary)、[第五章的异常处理](../../RLVR工业流程.md#reward-mapping) | `verl/utils/reward_score/coder1_plus/sandbox.py` | 2026-10-14 完成，macOS 已验证，firejail 分支待 Linux 实跑 |
 | 6 | 基础设施异常不再记 0 分，改成结构化状态加有限次重试，必要时整组作废 | [03 作业 3.2](../../03_Rollout与GRPO机制.md#assignment-3-2) | `verl/workers/reward_manager/infra_policy.py`、`prime_plus.py`、训练入口的 `prime_plus` 分支 | 2026-10-14 完成；2026-10-15 奖励管理器在 macOS CPU 上用 torch 整体跑通；firejail 分支与接入真实训练待 Linux 实跑 |
 | 7 | 和评测集去重；按当前模型的通过率过滤难度 | [01 全景](../../01_数据理解与GT构建.md#pipeline-1)、主框架 A8 | `examples/data_preprocess/coder1_plus_selection.py`、`coder1_plus.py --drop_task_ids/--keep_task_ids` | 2026-10-14 完成：去重用 v1 test 演示；难度筛选的通过率要靠 GPU 真实采样 |
+| 9 | 三种判分路径的量化审计（C1）：同一组候选过 original/legacy/protected，测正确解被拒率、错解误过率、作弊解、变异杀死率与耗时 | [02](../../02_Verifier与任务池验收.md) | `RLVR学习资料/examples/source-supplements/verify_verifier_metrics.py` | 2026-11-01 完成，Windows + local 后端实测，证据 `verifier-metrics-20261101/` |
 
 <a id="supplement-1"></a>
 
@@ -213,6 +214,25 @@
 **要补的。** 一个进程喂多条输入、逐条报告结果（通过 / 错误 / 超时 / 故障）、候选错误与判题故障分开记、接 prime_plus 的整组作废；提前退出沿用原版的「stdout 为空即失败」。CPU 可验证：固定候选（对、错、提前退出、超时）加一个人为的故障（沙箱起不来）。
 
 **状态。** 只登记，没有代码；实现与否等学习者决定。2026-10-19 学习者决定训练方案先去掉 TACO（本机没有数据），这一项暂不需要；TACO 并回来时再做。实现时与补强项 4、6 同一目录，原版判分文件不改。
+
+<a id="supplement-9"></a>
+## 补强项 9：三种判分路径的量化审计（C1，2026-11-01）
+
+`verify_verifier_metrics.py` 用 7 道 oracle 题的同一组候选（1 正确解 + 已知错解 + 6 变异体 + 1 个 `sys.exit(0)` 作弊解）过三条判分路径，量化「协议升级到底买到什么」。本机实测（Windows、`CODER1_PLUS_SANDBOX=local`，候选全部脚本自建的可信代码）：
+
+| 路径 | 正确解通过率 | 已知错解误过率 | 作弊解(sys.exit(0)) | 变异杀死率 | 平均耗时/次 |
+|---|---|---|---|---|---|
+| original | 1.0 | 0.25 | **误过** | 0.931 | 1.27s |
+| legacy | 1.0 | 0.25 | **误过** | 0.931 | 1.46s |
+| protected | 1.0 | 0.25 | **拦截** | 0.931 | 1.41s |
+
+三个结论（数字在 `verifier-metrics-20261101/metrics.json`，逐条记录可复算）：
+
+1. **作弊解的差异是机制性的**：拼接 + 整体退出码的 original/legacy 对提前 `sys.exit(0)` 必然误过（原版已知漏洞第一次有了成组对照数字）；protected 的完成事件缺失判失败，拦截。
+2. **错解误过 25%（2/8）三路径完全相同**：漏掉的是「全负数组的 Kadane 初值」和「回文串大小写」两类边界错——**这是测试强度问题，协议强度拦不住测试没覆盖的错解**。Verifier 协议与测试覆盖是两条独立的轴。
+3. **正确解 7/7 零误拒**：协议升级不伤害正确解；legacy 触发后与 original 数字一致，佐证分层路由行为。
+
+顺带修复：`sandbox.py` 在 Windows 上 `Popen(preexec_fn=...)` 直接抛 `ValueError`（Windows 不支持 preexec_fn），已按 macOS RLIMIT_CPU 的同款处理改为不传（靠墙钟超时兜底）。`test_source_supplements.py` 在 Windows 上仍有 4 个环境性 error（需要沙箱后端的用例，git stash 对照验证与本次改动无关）、3 个 skip；macOS/Linux 行为不变。
 
 ## 怎样运行
 

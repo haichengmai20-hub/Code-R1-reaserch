@@ -146,7 +146,10 @@ def run_python(code, stdin=None, timeout=30, backend=None, protected_paths=None)
             process = subprocess.Popen(_command(backend, script, workdir, timeout, protected_paths), cwd=workdir,
                                        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                        start_new_session=True,
-                                       preexec_fn=_limits(timeout) if backend != "firejail" else None)
+                                       # 2026-11-01：Windows 的 Popen 不支持 preexec_fn（传入直接 ValueError），
+                                       # 与 macOS 的 RLIMIT_CPU 同理，靠墙钟超时加整组清理兜底、不设资源上限。
+                                       preexec_fn=(_limits(timeout) if (backend != "firejail" and resource is not None
+                                                                        and platform.system() != "Windows") else None))
         except OSError as error:
             return ExecResult("infra_error", None, "", f"failed to start {backend}: {error}",
                               time.monotonic() - started, backend)
