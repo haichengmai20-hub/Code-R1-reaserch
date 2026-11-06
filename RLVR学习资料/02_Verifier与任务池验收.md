@@ -171,6 +171,8 @@
 
 **口述：** -1.1 是没按协议交卷，0.1 是交了但没过，1.1 是程序以 0 退出，0.0 是管理器兜底。0.1 不是通过，1.1 也不一定是通过：可能测试不够，也可能测试根本没跑。
 
+**分值本身的坑（[补强项 9](examples/source-supplements/README.md#supplement-9) 修的）。** 原版口径里格式边际（0.1 对 −1.1，差 1.2）大于正确边际（1.1 对 0.1，差 1.0）：格式合格的错答压过格式不合格的对答，而且后者在格式门处直接 −1.1，正确的代码根本不执行；长思考被截断、没写完 `</answer>` 的正确代码同样 −1.1。补强版改成字典序：正确性 1.0 对 0，格式 ±0.1 做次级信号，四档 1.1 / 0.9 / 0.1 / −0.1，任何对答严格高于任何错答；GRPO 组内标准化下，同质组里的格式学习信号不变（排序一致）。
+
 <a id="execution-gaps-2"></a>
 
 ## 执行边界：原版的四个缺口与补强版
@@ -403,6 +405,7 @@ $PY -B RLVR学习资料/examples/maximum-subarray/run_demo.py score
 |---|---|---|
 | reward 是 1.1 就是通过了吗？ | 不是。1.1 只说明格式合格、程序以 0 退出。`early_exit` 在断言前 `sys.exit(0)` 也拿 1.1；`wrong_empty` 在 3 条正数答案的 seed 上也拿 1.1。前者是测试没跑，后者是测试不够。补强版的受保护协议下，提前退出表现为结果缺失，判 0.1 | [_compute_score](../verl/utils/reward_score/coder1/__init__.py)，[反向补充源码](examples/source-supplements/README.md) |
 | Sandbox 和 Verifier 为什么要分开验收？ | 沙箱管「跑得安全」：权限、网络、资源、超时；判分器管「判得对」：测试是否执行完、比较规则是否合理。沙箱再严，`sys.exit(0)` 照样骗过只看退出码的判分器；判分规则再对，沙箱不禁网也不安全 | [主框架的执行边界](RLVR工业流程.md#execution-boundary)，[firejail_exec.py](../verl/utils/reward_score/coder1/firejail_exec.py) |
+| 格式分和正确分谁该更重？ | 正确分：格式只是提取手段，分值要字典序——先比对错、再比整洁。原版格式边际 1.2 > 正确边际 1.0，整洁的错答压过不整洁的对答；补强项 9 改成 1.0 与 ±0.1。同质组内格式学习不受影响：GRPO 组内标准化只看排序 | [reward 三档](#reward-levels-2)、[补强项 9](examples/source-supplements/README.md#supplement-9) |
 | 函数题怎么判对错，比较输出吗？ | 不比较。候选代码后面接着 `check` 断言和 `check(入口)`，作为一个程序执行，断言失败通过退出码非 0 传回。所以只有整体通过或失败，第一条失败后后面的断言不再执行 | [_compute_score](../verl/utils/reward_score/coder1/__init__.py)，[主框架的 Verifier 验收](RLVR工业流程.md#verification) |
 | 漏写 `from typing import List` 报 NameError，算算法错吗？ | 先查提交契约。原生评测器先拼 imports，RL 的拼法不补。同一份 LeetCode 53 写法在 Python 3.12 报错、3.14 通过。算法、依赖和环境的错误要分开归因 | [原生 execution.py](../LeetCodeDataset/leetcote/execution.py)，[主框架的执行边界](RLVR工业流程.md#execution-boundary) |
 | 两套代码提取规则一样吗？ | 不一样。原生评测器取最长的 python 代码块，RL 取最后一个 answer 里的所有代码块拼起来。回答里先放一段会抛异常的草稿时，原版判 0.1，原生评测器能通过 | [extract_completion](../LeetCodeDataset/leetcote/data.py)，[extract_code_from_string](../verl/utils/reward_score/coder1/__init__.py) |

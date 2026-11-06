@@ -13,6 +13,13 @@
 5. 结构化执行层与隔离后端（2026-10-14，见 sandbox.py）
    执行结果分成 ok、compile_error、runtime_error、memory_error、timeout、killed、infra_error；超时后清理
    整个进程组；Linux 用 firejail，macOS 用 sandbox-exec，由 CODER1_PLUS_SANDBOX 选择。
+9. 奖励分值的字典序修正（2026-11-06）
+   原版口径下格式边际（0.1 对 −1.1，差 1.2）大于正确边际（1.1 对 0.1，差 1.0）：格式合格但错误的回答
+   压过格式不合格但正确的回答，而且后者在格式门处直接 −1.1，代码根本不执行。补强版改为：
+   正确性 +1.0 / 其余 0，格式 ±0.1 做次级信号；严格标签缺失时退回整段响应的最后一个完整代码块照样执行。
+   四档：对+标签 1.1、对+无标签 0.9、错+标签 0.1、错/无代码+无标签 −0.1。任何含正确解的回答严格高于
+   任何不含的。CODER1_PLUS_REWARD=legacy 可复现原版口径（−1.1/0.1/1.1）。没有 ``prelude`` 的 GT 仍委托
+   原版判分，分值不变。
 
 没有 ``prelude`` 字段的 GT，例如 TACO 的函数题和标准输入输出题、KodCode 的 pytest 题，
 原样交给原版 ``coder1._compute_score``，行为不变。断言写法超出协议支持范围时，退回第 1 项的拼接契约。
@@ -26,6 +33,7 @@
 的 ``code_plus`` 分支。
 """
 import json
+import os
 import secrets
 import time
 
@@ -61,19 +69,30 @@ def compute_score_detailed(solution_str, ground_truth, extra_info=None, format_r
     if "functional" not in gt:
         raise ValueError(f"coder1_plus: a ground truth with 'prelude' must also carry 'functional': {list(gt)}")
 
-    # 格式门与代码抽取完全沿用原版。
-    if not _orig.validate_response_structure(solution_str) or not _orig.extract_code_from_string(solution_str):
-        return -answer_reward - format_reward, {"status": "format_error", "protocol": "format_gate",
-                                                "log": "Bad format detected!\n" + solution_str}
+    # 第 9 项：代码抽取与格式分值。strict = 标签合格且 <answer> 里有代码；
+    # fallback = 标签不合格时退回整段响应里的最后一个完整代码块（原版 extract 对无标签串本来就取全文代码块）。
+    strict = _orig.validate_response_structure(solution_str)
     solution_code = _orig.extract_code_from_string(solution_str)
+    extraction = "strict" if strict and solution_code else ("fallback" if solution_code else "none")
+    if os.environ.get("CODER1_PLUS_REWARD", "aligned") == "legacy":
+        if extraction != "strict":
+            return -answer_reward - format_reward, {"status": "format_error", "protocol": "format_gate",
+                                                    "extraction": extraction,
+                                                    "log": "Bad format detected!\n" + solution_str}
+        fmt = format_reward
+    else:
+        fmt = format_reward if extraction == "strict" else -format_reward
+        if extraction == "none":
+            return fmt, {"status": "format_error", "protocol": "format_gate", "extraction": "none",
+                         "log": "Bad format detected (no extractable code)!\n" + solution_str}
 
     started = time.time()
     try:
         entry, cases = protocol.parse_cases(gt["functional"])
     except protocol.UnsupportedTests as reason:
         result = sandbox.run_python(build_program(gt["prelude"], solution_code, gt["functional"]), timeout=timeout)
-        info = {"protocol": "legacy", "legacy_reason": str(reason), "exec_status": result.status,
-                "duration": round(time.time() - started, 3)}
+        info = {"protocol": "legacy", "legacy_reason": str(reason), "extraction": extraction,
+                "exec_status": result.status, "duration": round(time.time() - started, 3)}
         if result.status == "infra_error":
             return None, {**info, "status": "infra_error", "log": result.stderr}
         passed = result.ok
@@ -81,7 +100,8 @@ def compute_score_detailed(solution_str, ground_truth, extra_info=None, format_r
         nonce = secrets.token_hex(16)
         result = sandbox.run_python(protocol.build_harness(gt["prelude"], solution_code, entry, cases, nonce),
                                     timeout=timeout)
-        info = {"protocol": "protected", "exec_status": result.status, "duration": round(time.time() - started, 3)}
+        info = {"protocol": "protected", "extraction": extraction, "exec_status": result.status,
+                "duration": round(time.time() - started, 3)}
         if result.status == "infra_error":
             return None, {**info, "status": "infra_error", "log": result.stderr}
         verdict = protocol.judge(result.stdout, cases, nonce, gt.get("compare", "exact"))
@@ -98,7 +118,7 @@ def compute_score_detailed(solution_str, ground_truth, extra_info=None, format_r
         lines.append(result.stderr.strip()[-_orig._MAX_CHAR_DISPLAY:])
     info["log"] = "\n".join(lines)
     info["status"] = "passed" if passed else "failed"
-    return (format_reward + answer_reward if passed else format_reward), info
+    return (answer_reward + fmt if passed else fmt), info
 
 
 def _compute_score(solution_str, ground_truth, extra_info, format_reward=0.1, answer_reward=1.):

@@ -112,6 +112,35 @@ def main():
                      "forged_frames": 0.1, "read_dataset_file": 0.1}
     checks["protocol_adversarial"] = all(adversarial[k]["coder1_plus"] == v for k, v in expected_plus.items())
     checks["original_gap_reproduced"] = adversarial["early_exit_sys"]["original_coder1"] == 1.1
+
+    # 补强项 9：奖励分值的字典序——正确性压倒格式
+    scheme_cases = {
+        "tidy_reference": (env.wrap_response(row["extra_info"]["reference"]), 1.1),
+        "untidy_reference": ("```python\n" + row["extra_info"]["reference"] + "\n```", 0.9),
+        "tidy_wrong": (env.wrap_response(ADVERSARIAL["wrong_sum"]), 0.1),
+        "untidy_wrong": ("```python\n" + ADVERSARIAL["wrong_sum"] + "```", -0.1),
+        "tags_without_code": ("<think>x</think><answer>no code here</answer>", -0.1),
+    }
+    scored = {}
+    for name, (response, expected) in scheme_cases.items():
+        score, info = coder1_plus.compute_score_detailed(response, row["reward_model"]["ground_truth"],
+                                                         row["extra_info"])
+        scored[name] = score
+        if score != expected:
+            print(f"reward scheme mismatch: {name} got {score}, expected {expected} (extraction={info.get('extraction')})")
+    report["reward_scheme"] = {"cases": scored, "env": os.environ.get("CODER1_PLUS_REWARD", "aligned")}
+    correct = {k: scored[k] for k in ("tidy_reference", "untidy_reference")}
+    wrong = {k: scored[k] for k in ("tidy_wrong", "untidy_wrong", "tags_without_code")}
+    checks["reward_scheme_values"] = scored == {k: v for k, (_, v) in scheme_cases.items()}
+    checks["reward_correctness_dominates"] = min(correct.values()) > max(wrong.values())
+    os.environ["CODER1_PLUS_REWARD"] = "legacy"
+    try:
+        legacy_untidy, _ = coder1_plus.compute_score_detailed(scheme_cases["untidy_reference"][0],
+                                                              row["reward_model"]["ground_truth"], row["extra_info"])
+    finally:
+        os.environ.pop("CODER1_PLUS_REWARD", None)
+    report["reward_scheme"]["legacy_untidy_reference"] = legacy_untidy
+    checks["legacy_gate_reproduced"] = legacy_untidy == -1.1
     ladder = by_task["word-ladder-ii"]
     stable = [coder1_plus.compute_score_detailed(env.wrap_response(ladder["extra_info"]["reference"]),
                                                  ladder["reward_model"]["ground_truth"], ladder["extra_info"])[0]

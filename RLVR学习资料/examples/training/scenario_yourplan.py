@@ -21,8 +21,14 @@ import gzip
 import json
 import math
 import random
+import os
 import sys
 from pathlib import Path
+
+# 推演按原版分值口径（−1.1 / 0.1 / 1.1）生成：全部叙述、检查器数字都建立在这组值上。
+# 实跑默认走补强项 9 的 aligned 口径（1.1 / 0.9 / 0.1 / −0.1），见 coder1_plus 与 supplements README。
+os.environ.setdefault("CODER1_PLUS_REWARD", "legacy")
+
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))

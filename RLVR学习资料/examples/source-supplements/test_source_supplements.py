@@ -6,6 +6,7 @@
 import contextlib
 import io
 import json
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -70,13 +71,36 @@ class GroundTruthContract(unittest.TestCase):
             self.assertEqual(plus, original)
             self.assertEqual(plus, expected)
 
-    def test_format_gate_and_wrong_answer_unchanged(self):
+    def test_aligned_scheme_orders_correctness_above_format(self):
+        # 补强项 9（默认 aligned）：任何含正确解的回答严格高于任何不含的；格式只做 ±0.1 的次级信号。
         row, _, candidate = reference_candidate("maximum-subarray")
         gt = row["reward_model"]["ground_truth"]
-        bad_format, _ = PLUS._compute_score("```python\n" + candidate + "\n```", gt, extra_info=row["extra_info"])
-        wrong, _ = PLUS._compute_score(env.wrap_response(WRONG_SUM), gt, extra_info=row["extra_info"])
-        self.assertEqual(bad_format, -1.1)
-        self.assertEqual(wrong, 0.1)
+        untidy_code = "```python\n" + candidate + "\n```"
+        cases = {
+            "tidy_reference": (env.wrap_response(candidate), 1.1),
+            "untidy_reference": (untidy_code, 0.9),
+            "tidy_wrong": (env.wrap_response(WRONG_SUM), 0.1),
+            "untidy_wrong": ("```python\n" + WRONG_SUM + "\n```", -0.1),
+            "tags_without_code": ("<think>x</think><answer>no code here</answer>", -0.1),
+        }
+        for name, (response, expected) in cases.items():
+            score, info = PLUS._compute_score(response, gt, extra_info=row["extra_info"])
+            self.assertEqual(score, expected, name)
+        self.assertGreater(min(cases["tidy_reference"][1], cases["untidy_reference"][1]),
+                           max(cases["tidy_wrong"][1], cases["untidy_wrong"][1], cases["tags_without_code"][1]))
+
+    def test_legacy_scheme_reproduces_original_gate(self):
+        row, _, candidate = reference_candidate("maximum-subarray")
+        gt = row["reward_model"]["ground_truth"]
+        with contextlib.redirect_stdout(io.StringIO()):
+            os.environ["CODER1_PLUS_REWARD"] = "legacy"
+            try:
+                bad_format, _ = PLUS._compute_score("```python\n" + candidate + "\n```", gt,
+                                                    extra_info=row["extra_info"])
+                wrong, _ = PLUS._compute_score(env.wrap_response(WRONG_SUM), gt, extra_info=row["extra_info"])
+            finally:
+                os.environ.pop("CODER1_PLUS_REWARD", None)
+        self.assertEqual((bad_format, wrong), (-1.1, 0.1))
 
     def test_early_exit_is_now_rejected(self):
         # 原版只看退出码，提前退出拿 1.1；补强项 4 的受保护协议发现结果缺失，判 0.1。

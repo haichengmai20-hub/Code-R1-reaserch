@@ -8,11 +8,11 @@ uv 管理的 Python 不允许直接 pip 安装，先建 venv（2026-10-15 在 ma
     ~/.venvs/code-r1-cpu/bin/python -B RLVR学习资料/examples/source-supplements/verify_reward_manager_cpu.py
 
 不需要 GPU、模型或 tokenizer：用一个假的 tokenizer 把 4 条固定回答放进同一个 uid 组，
-回答分别是 LeetCode 53 的参考解、返回总和的错解、提前退出、缺格式标签。只执行这 4 个固定程序。
+回答分别是 LeetCode 53 的参考解、返回总和的错解、提前退出、缺标签但代码正确的回答。只执行这 4 个固定程序。
 
 三种组合：
 1. 原版管理器 + 原版 GT：没有 firejail 时，判题出错被记成 0.0（02 讲的缺口 3）。
-2. 补强版管理器 + 补强版 GT：受保护协议加本机沙箱，得到 1.1、0.1、0.1、-1.1。
+2. 补强版管理器 + 补强版 GT：受保护协议加本机沙箱，得到 1.1、0.1、0.1、0.9（第四条缺标签但代码对，补强项 9）。
 3. 补强版管理器 + 原版 GT：没有 firejail 时，判题故障先重试，仍失败就整组作废。
 """
 import contextlib
@@ -43,7 +43,7 @@ REFERENCE = ("from typing import List\nclass Solution:\n    def maxSubArray(self
              "            ans = max(ans, f)\n        return ans")
 WRONG_SUM = "class Solution:\n    def maxSubArray(self, nums):\n        return sum(nums)"
 EARLY_EXIT = "import sys\nsys.exit(0)"
-NAMES = ["reference", "wrong_sum", "early_exit", "bad_format"]
+NAMES = ["reference", "wrong_sum", "early_exit", "untidy_reference"]
 RESPONSES = [supplement_env.wrap_response(REFERENCE), supplement_env.wrap_response(WRONG_SUM),
              supplement_env.wrap_response(EARLY_EXIT), "```python\n" + REFERENCE + "\n```"]
 
@@ -99,7 +99,7 @@ def main():
     scores, _ = run(manager, make_batch("code_plus", plus_gt, extra))
     result["plus_manager_plus_gt"] = dict(zip(NAMES, scores))
     result["plus_manager_plus_gt_report"] = manager.last_report
-    checks["plus_manager"] = scores == [1.1, 0.1, 0.1, -1.1] and manager.last_report["infra_errors"] == 0
+    checks["plus_manager"] = scores == [1.1, 0.1, 0.1, 0.9] and manager.last_report["infra_errors"] == 0
 
     manager = PrimePlusRewardManager(FixedTokenizer(), 0, max_retries=1)
     scores, _ = run(manager, make_batch("code", original_gt, extra))
