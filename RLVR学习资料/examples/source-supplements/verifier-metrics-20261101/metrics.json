@@ -1,0 +1,1260 @@
+{
+  "date": "2026-11-01",
+  "platform": "win32",
+  "python": "3.11.0",
+  "sandbox": "local",
+  "problems": 7,
+  "total_s": 186.3,
+  "metrics": {
+    "original": {
+      "correct_pass_rate": 1.0,
+      "correct_rejected_rate": 0.0,
+      "wrong_pass_rate": 0.25,
+      "cheat_pass": [
+        true
+      ],
+      "mutant_kill_rate": 0.931,
+      "avg_duration_s": 1.273,
+      "n": 45
+    },
+    "legacy": {
+      "correct_pass_rate": 1.0,
+      "correct_rejected_rate": 0.0,
+      "wrong_pass_rate": 0.25,
+      "cheat_pass": [
+        true
+      ],
+      "mutant_kill_rate": 0.931,
+      "avg_duration_s": 1.458,
+      "n": 45
+    },
+    "protected": {
+      "correct_pass_rate": 1.0,
+      "correct_rejected_rate": 0.0,
+      "wrong_pass_rate": 0.25,
+      "cheat_pass": [
+        false
+      ],
+      "mutant_kill_rate": 0.931,
+      "avg_duration_s": 1.409,
+      "n": 45
+    }
+  },
+  "rows": [
+    {
+      "slug": "maximum-subarray",
+      "path": "original",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.041
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "legacy",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 4.006
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "protected",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.048
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "original",
+      "kind": "wrong_max_element",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.006
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "legacy",
+      "kind": "wrong_max_element",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.012
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "protected",
+      "kind": "wrong_max_element",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.045
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "original",
+      "kind": "wrong_zero_start",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.029
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "legacy",
+      "kind": "wrong_zero_start",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.053
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "protected",
+      "kind": "wrong_zero_start",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.045
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "original",
+      "kind": "cheat_exit_0",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.001
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "legacy",
+      "kind": "cheat_exit_0",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.068
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "protected",
+      "kind": "cheat_exit_0",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.038
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "original",
+      "kind": "mutant:line 3: 0 -> 1",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.008
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "legacy",
+      "kind": "mutant:line 3: 0 -> 1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.011
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "protected",
+      "kind": "mutant:line 3: 0 -> 1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.078
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "original",
+      "kind": "mutant:line 4: 1 -> 0",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.002
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "legacy",
+      "kind": "mutant:line 4: 1 -> 0",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.015
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "protected",
+      "kind": "mutant:line 4: 1 -> 0",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.026
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "original",
+      "kind": "mutant:line 5: max() -> min()",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 0.994
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "legacy",
+      "kind": "mutant:line 5: max() -> min()",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.016
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "protected",
+      "kind": "mutant:line 5: max() -> min()",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.035
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "original",
+      "kind": "mutant:line 5: + -> -",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.01
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "legacy",
+      "kind": "mutant:line 5: + -> -",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.015
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "protected",
+      "kind": "mutant:line 5: + -> -",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.038
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "original",
+      "kind": "mutant:line 6: max() -> min()",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.016
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "legacy",
+      "kind": "mutant:line 6: max() -> min()",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.024
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "protected",
+      "kind": "mutant:line 6: max() -> min()",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.035
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "original",
+      "kind": "mutant:line 3: 0 -> -1",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.036
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "legacy",
+      "kind": "mutant:line 3: 0 -> -1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.0
+    },
+    {
+      "slug": "maximum-subarray",
+      "path": "protected",
+      "kind": "mutant:line 3: 0 -> -1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.075
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "original",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 0.986
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "legacy",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 0.998
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "protected",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.487
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "original",
+      "kind": "wrong_non_strict",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.009
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "legacy",
+      "kind": "wrong_non_strict",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.016
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "protected",
+      "kind": "wrong_non_strict",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.063
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "original",
+      "kind": "mutant:line 7: <= -> <",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.011
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "legacy",
+      "kind": "mutant:line 7: <= -> <",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.016
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "protected",
+      "kind": "mutant:line 7: <= -> <",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.037
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "original",
+      "kind": "mutant:line 5: <= -> <",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.002
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "legacy",
+      "kind": "mutant:line 5: <= -> <",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.021
+    },
+    {
+      "slug": "increasing-triplet-subsequence",
+      "path": "protected",
+      "kind": "mutant:line 5: <= -> <",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.031
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "original",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 0.995
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "legacy",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.035
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "protected",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.041
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "original",
+      "kind": "wrong_case_sensitive",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 2.003
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "legacy",
+      "kind": "wrong_case_sensitive",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.025
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "protected",
+      "kind": "wrong_case_sensitive",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.049
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "original",
+      "kind": "mutant:line 9: - -> +",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.015
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "legacy",
+      "kind": "mutant:line 9: - -> +",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.064
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "protected",
+      "kind": "mutant:line 9: - -> +",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.037
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "original",
+      "kind": "mutant:line 8: + -> -",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.473
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "legacy",
+      "kind": "mutant:line 8: + -> -",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.063
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "protected",
+      "kind": "mutant:line 8: + -> -",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.019
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "original",
+      "kind": "mutant:line 6: != -> ==",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.007
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "legacy",
+      "kind": "mutant:line 6: != -> ==",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 0.995
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "protected",
+      "kind": "mutant:line 6: != -> ==",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.031
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "original",
+      "kind": "mutant:line 4: 0 -> -1",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.061
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "legacy",
+      "kind": "mutant:line 4: 0 -> -1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.01
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "protected",
+      "kind": "mutant:line 4: 0 -> -1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.041
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "original",
+      "kind": "mutant:line 5: < -> <=",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.023
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "legacy",
+      "kind": "mutant:line 5: < -> <=",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.015
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "protected",
+      "kind": "mutant:line 5: < -> <=",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.055
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "original",
+      "kind": "mutant:line 4: 1 -> 2",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.001
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "legacy",
+      "kind": "mutant:line 4: 1 -> 2",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 0.996
+    },
+    {
+      "slug": "valid-palindrome",
+      "path": "protected",
+      "kind": "mutant:line 4: 1 -> 2",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.043
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "original",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.029
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "legacy",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.025
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "protected",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.049
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "original",
+      "kind": "wrong_inclusive_60",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 0.996
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "legacy",
+      "kind": "wrong_inclusive_60",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.034
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "protected",
+      "kind": "wrong_inclusive_60",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.531
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "original",
+      "kind": "mutant:line 3: 1 -> 0",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.009
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "legacy",
+      "kind": "mutant:line 3: 1 -> 0",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 0.997
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "protected",
+      "kind": "mutant:line 3: 1 -> 0",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.051
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "original",
+      "kind": "mutant:line 3: 1 -> 2",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.003
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "legacy",
+      "kind": "mutant:line 3: 1 -> 2",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.032
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "protected",
+      "kind": "mutant:line 3: 1 -> 2",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.077
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "original",
+      "kind": "mutant:line 3: > -> >=",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.011
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "legacy",
+      "kind": "mutant:line 3: > -> >=",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.022
+    },
+    {
+      "slug": "number-of-senior-citizens",
+      "path": "protected",
+      "kind": "mutant:line 3: > -> >=",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.042
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "original",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 0.995
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "legacy",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.012
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "protected",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.281
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "original",
+      "kind": "wrong_first_half",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.038
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "legacy",
+      "kind": "wrong_first_half",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.078
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "protected",
+      "kind": "wrong_first_half",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.03
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "original",
+      "kind": "mutant:line 3: 0 -> -1",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.013
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "legacy",
+      "kind": "mutant:line 3: 0 -> -1",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.012
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "protected",
+      "kind": "mutant:line 3: 0 -> -1",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.069
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "original",
+      "kind": "mutant:line 3: 0 -> 1",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 0.998
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "legacy",
+      "kind": "mutant:line 3: 0 -> 1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.864
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "protected",
+      "kind": "mutant:line 3: 0 -> 1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.052
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "original",
+      "kind": "mutant:line 3: 1 -> 2",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.014
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "legacy",
+      "kind": "mutant:line 3: 1 -> 2",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.023
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "protected",
+      "kind": "mutant:line 3: 1 -> 2",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.077
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "original",
+      "kind": "mutant:line 5: // -> *",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.02
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "legacy",
+      "kind": "mutant:line 5: // -> *",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.022
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "protected",
+      "kind": "mutant:line 5: // -> *",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.035
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "original",
+      "kind": "mutant:line 4: < -> <=",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 10.951
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "legacy",
+      "kind": "mutant:line 4: < -> <=",
+      "passed": false,
+      "score": null,
+      "status": "exception:RecursionError",
+      "duration_s": 16.105
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "protected",
+      "kind": "mutant:line 4: < -> <=",
+      "passed": false,
+      "score": null,
+      "status": "exception:RecursionError",
+      "duration_s": 16.152
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "original",
+      "kind": "mutant:line 7: 1 -> 2",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.038
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "legacy",
+      "kind": "mutant:line 7: 1 -> 2",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.027
+    },
+    {
+      "slug": "find-minimum-in-rotated-sorted-array",
+      "path": "protected",
+      "kind": "mutant:line 7: 1 -> 2",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.045
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "original",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.109
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "legacy",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.072
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "protected",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.037
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "original",
+      "kind": "wrong_no_dedup",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.076
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "legacy",
+      "kind": "wrong_no_dedup",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.029
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "protected",
+      "kind": "wrong_no_dedup",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.034
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "original",
+      "kind": "mutant:line 4: >= -> >",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.016
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "legacy",
+      "kind": "mutant:line 4: >= -> >",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.021
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "protected",
+      "kind": "mutant:line 4: >= -> >",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.035
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "original",
+      "kind": "mutant:line 4: 2 -> 1",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.013
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "legacy",
+      "kind": "mutant:line 4: 2 -> 1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.013
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "protected",
+      "kind": "mutant:line 4: 2 -> 1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.049
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "original",
+      "kind": "mutant:line 4: 0 -> 1",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.048
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "legacy",
+      "kind": "mutant:line 4: 0 -> 1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.541
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "protected",
+      "kind": "mutant:line 4: 0 -> 1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.039
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "original",
+      "kind": "mutant:line 4: 2 -> 3",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.024
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "legacy",
+      "kind": "mutant:line 4: 2 -> 3",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.058
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "protected",
+      "kind": "mutant:line 4: 2 -> 3",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.043
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "original",
+      "kind": "mutant:line 4: 0 -> -1",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.077
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "legacy",
+      "kind": "mutant:line 4: 0 -> -1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.033
+    },
+    {
+      "slug": "third-maximum-number",
+      "path": "protected",
+      "kind": "mutant:line 4: 0 -> -1",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.067
+    },
+    {
+      "slug": "shuffle-the-array",
+      "path": "original",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.013
+    },
+    {
+      "slug": "shuffle-the-array",
+      "path": "legacy",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.059
+    },
+    {
+      "slug": "shuffle-the-array",
+      "path": "protected",
+      "kind": "correct",
+      "passed": true,
+      "score": 1.1,
+      "status": "passed",
+      "duration_s": 1.081
+    },
+    {
+      "slug": "shuffle-the-array",
+      "path": "original",
+      "kind": "wrong_swapped_pairs",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.029
+    },
+    {
+      "slug": "shuffle-the-array",
+      "path": "legacy",
+      "kind": "wrong_swapped_pairs",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.005
+    },
+    {
+      "slug": "shuffle-the-array",
+      "path": "protected",
+      "kind": "wrong_swapped_pairs",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.07
+    },
+    {
+      "slug": "shuffle-the-array",
+      "path": "original",
+      "kind": "mutant:line 6: + -> -",
+      "passed": false,
+      "score": null,
+      "status": "exception:KeyError",
+      "duration_s": 1.042
+    },
+    {
+      "slug": "shuffle-the-array",
+      "path": "legacy",
+      "kind": "mutant:line 6: + -> -",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.038
+    },
+    {
+      "slug": "shuffle-the-array",
+      "path": "protected",
+      "kind": "mutant:line 6: + -> -",
+      "passed": false,
+      "score": 0.1,
+      "status": "failed",
+      "duration_s": 1.065
+    }
+  ]
+}
