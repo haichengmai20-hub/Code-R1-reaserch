@@ -143,10 +143,15 @@ def run_python(code, stdin=None, timeout=30, backend=None, protected_paths=None)
         env = {key: value for key, value in os.environ.items() if key != "PYTHONPATH"}
         env["OPENBLAS_NUM_THREADS"] = "1"
         try:
+            _on_windows = platform.system() == "Windows"
+            # preexec_fn 与 start_new_session 都是 POSIX 专属；Windows 上仅显式选择 local 后端时
+            # 可达（auto 在 Windows 仍是 unavailable，不静默降级的原则不变）：墙钟超时照常生效，
+            # 资源限额降级为无——本机教学验证用途，生产训练走 Linux firejail。
             process = subprocess.Popen(_command(backend, script, workdir, timeout, protected_paths), cwd=workdir,
                                        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       start_new_session=True,
-                                       preexec_fn=_limits(timeout) if backend != "firejail" else None)
+                                       start_new_session=not _on_windows,
+                                       preexec_fn=(_limits(timeout) if backend != "firejail" and not _on_windows
+                                                   else None))
         except OSError as error:
             return ExecResult("infra_error", None, "", f"failed to start {backend}: {error}",
                               time.monotonic() - started, backend)
@@ -155,10 +160,13 @@ def run_python(code, stdin=None, timeout=30, backend=None, protected_paths=None)
             raw_out, raw_err = process.communicate(stdin.encode() if stdin else None, timeout=timeout)
         except subprocess.TimeoutExpired:
             timed_out = True
-            try:
-                os.killpg(process.pid, signal.SIGKILL)  # 杀掉整个进程组，包括候选代码派生的子进程
-            except ProcessLookupError:
-                pass
+            if platform.system() == "Windows":  # Windows 无进程组；local 后端教学验证用，直接杀主进程
+                process.kill()
+            else:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)  # 杀掉整个进程组，包括候选代码派生的子进程
+                except ProcessLookupError:
+                    pass
             raw_out, raw_err = process.communicate()
     stdout = raw_out[:OUTPUT_LIMIT].decode(errors="replace")
     stderr = raw_err[:OUTPUT_LIMIT].decode(errors="replace")

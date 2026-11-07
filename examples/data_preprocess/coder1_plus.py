@@ -10,6 +10,10 @@
    模型漏写 imports 不再被判错，这与原生评测器和 LeetCode 官方判题的行为一致。
 2. 可追溯的 metadata
    extra_info 在原版 5 个字段之外，再存 task_id、question_id、来源文件与行号、GT 契约版本和测试版本。
+7. 性能轮标定（补强项 10 的数据侧）
+   ``--perf_index`` 指向 coder1_plus_perf.py 产出的 perf-index.jsonl，把每题标定的 perf 字段
+   （确定性大输入规格、取自参考解实测的 time_limit_ms、期望输出）并进 ``extra_info.perf``。
+   判分器据此加跑性能轮；没有标定的题不写该字段，性能轮自动跳过。
 3. 任意顺序的比较规则（补强项 4 的数据侧）
    题面写明「in any order」的题，GT 加上 compare=unordered_outer，判分时列表答案忽略外层顺序。
 5. 去污染与难度筛选（补强项 7）
@@ -54,6 +58,48 @@ USER_PROMPT_PREFIX = ("Please solve the programming task below using a self-cont
                       "in a markdown code block.\n\n")
 SCHEMA_COLUMNS = ["data_source", "prompt", "ability", "reward_model", "extra_info"]
 SHUFFLE_SEED = 666  # 与原版相同的种子；打乱算法不同，只影响文件行序，训练时数据加载器还会再打乱
+
+_CONSTRAINT_HEAD = re.compile(r"constraints", re.IGNORECASE)
+_POW10_TOKEN = re.compile(r"(?<![\d.])(10[1-9]|1(0{2,}))(?![\d.])")  # '105'=10^5（上标丢失）、'1000'=10^3
+
+
+def _as_pow10(token: str):
+    m = re.fullmatch(r"10([1-9])", token)
+    if m:
+        return 10 ** int(m.group(1))
+    m = re.fullmatch(r"1(0{2,})", token)
+    if m:
+        return 10 ** len(m.group(1))
+    return None
+
+
+def constraint_lines(question_title: str):
+    """D1 定案「约束该给」的数据侧落地：从完整题面解析 Constraints 并规范化。
+
+    上标丢失按 10 的幂识别（'105'→100000，与 perf.py 同规则）；只收比较行；
+    解析不出或题面没有 Constraints 段时返回空列表——该题 prompt 保持原样，
+    与「判分器认的才是硬约束」的口径一致（没把握的约束不硬造）。
+    """
+    if not question_title:
+        return []
+    hit = _CONSTRAINT_HEAD.search(question_title)
+    if not hit:
+        return []
+    tail = question_title[hit.end():]
+    lines = []
+    for raw in tail.splitlines():
+        line = raw.strip().strip(":").strip()  # 'Constraints:' 的冒号会留在段首
+        if not line:
+            if lines:
+                break  # Constraints 段结束（遇到空行且已收集到内容）
+            continue
+        if not any(op in line for op in ("<=", ">=", "<", ">")):
+            if lines:
+                break  # 已收集完，遇到非比较行（例如 Follow up:）即结束
+            continue  # 段首的杂行（冒号残留、\xa0 等）跳过，等第一条比较行
+        fixed = _POW10_TOKEN.sub(lambda m: str(_as_pow10(m.group(1)) or m.group(1)), line)
+        lines.append(fixed.rstrip(".") + ".")
+    return lines
 
 
 def original_system_prompt() -> str:
@@ -114,42 +160,59 @@ def build_ground_truth(record, extra_cases=()) -> str:
     return json.dumps(gt)
 
 
-def build_row(source_file: str, line_no: int, record, index: int, split: str, system_prompt: str, extra_cases=()):
+def build_row(source_file: str, line_no: int, record, index: int, split: str, system_prompt: str, extra_cases=(),
+              perf=None, constraints=None):
     user_prompt = USER_PROMPT_PREFIX + record["meta"]["query"].strip()
+    if constraints:  # D1：约束该给（数值消歧 + 复杂度提示）；样式对齐课程 demo 的 ACTOR_PROMPT_APPEND
+        user_prompt += "\n\nExplicit task constraints:\n" + "\n".join(f"- {line}" for line in constraints)
+    extra_info = {
+        # 原版的 5 个字段，含义不变
+        "split": split,
+        "index": index,
+        "reference": record["completion"],
+        "prompt": user_prompt,
+        "dataset": "LeetCodeDataset",
+        # 补强版新增的追溯字段
+        "task_id": record["task_id"],
+        "question_id": record["meta"]["question_id"],
+        "source_file": f"LeetCodeDataset/data/{source_file}",
+        "source_line_1_based": line_no,
+        "gt_contract": GT_CONTRACT,
+        "test_version": f"leetcode-examples+aug{len(extra_cases)}" if extra_cases else "leetcode-examples",
+        "added_case_ids": [case["case_id"] for case in extra_cases],
+    }
+    if perf is not None:  # 补强项 10 的性能轮标定（time_limit_ms + 确定性大输入规格）
+        extra_info["perf"] = perf
     return {
         "data_source": DATA_SOURCE,
         "prompt": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
         "ability": "coding",
         "reward_model": {"style": "rule", "ground_truth": build_ground_truth(record, extra_cases)},
-        "extra_info": {
-            # 原版的 5 个字段，含义不变
-            "split": split,
-            "index": index,
-            "reference": record["completion"],
-            "prompt": user_prompt,
-            "dataset": "LeetCodeDataset",
-            # 补强版新增的追溯字段
-            "task_id": record["task_id"],
-            "question_id": record["meta"]["question_id"],
-            "source_file": f"LeetCodeDataset/data/{source_file}",
-            "source_line_1_based": line_no,
-            "gt_contract": GT_CONTRACT,
-            "test_version": f"leetcode-examples+aug{len(extra_cases)}" if extra_cases else "leetcode-examples",
-            "added_case_ids": [case["case_id"] for case in extra_cases],
-        },
+        "extra_info": extra_info,
     }
 
 
-def build_leetcode_rows(augment=None):
-    """augment：{task_id: [接受的用例]}，只会追加 status 为 accepted 的用例。"""
+def build_leetcode_rows(augment=None, perf_index=None, append_constraints=False):
+    """augment：{task_id: [接受的用例]}，只会追加 status 为 accepted 的用例。
+    perf_index：{task_id: perf}，由 coder1_plus_perf.py 产出的 perf-index.jsonl 转换而来；
+    没有标定的题不写 perf 字段，判分时性能轮自动跳过。
+    append_constraints：D1 定案「约束该给」——解析 Constraints 段并规范化后追加进 user prompt；
+    解析不出的题保持原样。默认关闭以保持与原版逐字相同的 prompt（单变量对照）。"""
     check_prompt_template_unchanged()
     system_prompt = original_system_prompt()
     augment = {task: [case for case in cases if case.get("status") == "accepted"]
                for task, cases in (augment or {}).items()}
+    perf_index = perf_index or {}
+
+    def constraints_of(record):
+        return constraint_lines(record["meta"].get("question_title", "")) if append_constraints else None
+
     train, test = leetcode_records()
-    train_rows = [build_row(name, line, record, index, "train", system_prompt, augment.get(record["task_id"], ()))
+    train_rows = [build_row(name, line, record, index, "train", system_prompt, augment.get(record["task_id"], ()),
+                            perf_index.get(record["task_id"]), constraints_of(record))
                   for index, (name, line, record) in enumerate(train)]
-    test_rows = [build_row(name, line, record, index, "test", system_prompt, augment.get(record["task_id"], ()))
+    test_rows = [build_row(name, line, record, index, "test", system_prompt, augment.get(record["task_id"], ()),
+                           perf_index.get(record["task_id"]), constraints_of(record))
                  for index, (name, line, record) in enumerate(test)]
     return train_rows, test_rows
 
@@ -200,10 +263,25 @@ def main(argv=None):
     parser.add_argument("--keep_task_ids", default=None, help="JSON list; if given, keep only these task_ids in train")
     parser.add_argument("--merge_taco_from", default=None,
                         help="directory holding the original coder1.py train/test parquet; its TACO rows are merged as-is")
+    parser.add_argument("--perf_index", default=None,
+                        help="perf-index.jsonl produced by coder1_plus_perf.py; merges each task's perf into extra_info")
+    parser.add_argument("--append_constraints", action="store_true",
+                        help="parse the Constraints section of question_title, normalize 10^k tokens, "
+                             "and append to the user prompt (D1; default off keeps the prompt verbatim "
+                             "with the original)")
     args = parser.parse_args(argv)
 
     augment = json.loads(Path(args.augment_cases).read_text(encoding="utf-8")) if args.augment_cases else None
-    train_rows, test_rows = build_leetcode_rows(augment)
+    perf_index = None
+    if args.perf_index:
+        perf_index = {}
+        with open(args.perf_index, encoding="utf-8") as handle:
+            for line in handle:
+                if line.strip():
+                    entry = json.loads(line)
+                    if entry.get("perf"):
+                        perf_index[entry["task_id"]] = entry["perf"]
+    train_rows, test_rows = build_leetcode_rows(augment, perf_index, args.append_constraints)
     if args.drop_task_ids:
         drop = set(json.loads(Path(args.drop_task_ids).read_text(encoding="utf-8")))
         train_rows = [row for row in train_rows if row["extra_info"]["task_id"] not in drop]
@@ -227,6 +305,8 @@ def main(argv=None):
         write_parquet(test_rows, out_dir / "test.parquet")
 
     print(f"train rows: {len(train_rows)}  test rows: {len(test_rows)}  -> {out_dir}")
+    if perf_index:
+        print(f"perf merged for {len(perf_index)} tasks (extra_info.perf)")
     if args.parquet:
         print(f"Train with: data.train_files={out_dir}/train.parquet data.val_files={out_dir}/test.parquet")
         print("Rows with data_source=code_plus are scored by verl/utils/reward_score/coder1_plus.")
