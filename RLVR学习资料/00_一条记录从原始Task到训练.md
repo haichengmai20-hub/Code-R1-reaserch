@@ -97,36 +97,38 @@ Code-R1 每一步训练做这些事：
 
 <a id="station-2"></a>
 
-## 第 ② 站 变成训练样本行：`leetcode2k()` 做了三件事
+## 第 ② 站 变成训练样本行：`coder1_plus.py` 做了三件事
 
-预处理器 `examples/data_preprocess/coder1.py` 把这一行变成 Code-R1 的样本行（下面是按源码字符串操作复原的真实结果）：
+预处理器 `examples/data_preprocess/coder1_plus.py` 把这一行变成训练样本行（下面是真实产物的截短版）：
 
 ```json
 {
-  "data_source": "code",
+  "data_source": "code_plus",
   "prompt": [
-    {"role": "system", "content": "You are a helpful programming assistant. ... The reasoning process and answer are enclosed within <think>...</think> and <answer>...</answer> tags, respectively."},
-    {"role": "user",   "content": "Please solve the programming task below using a self-contained code snippet in a markdown code block.\n\nGiven an integer array nums, find the subarray with the largest sum, and return its sum.\n \nPlease complete the following python code precisely:\n```python\nclass Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n```"}
+    {"role": "system", "content": "You are a helpful programming assistant. ... <think>...</think> and <answer>...</answer> ..."},
+    {"role": "user",   "content": "Please solve the programming task below ... ```python\nclass Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n```\n\nExplicit task constraints:\n- 1 <= nums.length <= 100000.\n- -10000 <= nums[i] <= 10000."}
   ],
   "ability": "coding",
-  "reward_model": {"style": "rule", "ground_truth": "{\"functional\": \"def check(candidate):\\n    assert candidate(nums = [-2,1,-3,4,-1,2,1,-5,4]) == 6\\n    assert candidate(nums = [1]) == 1\\n    assert candidate(nums = [5,4,-1,7,8]) == 23\\n\\n\\ncheck(Solution().maxSubArray)\"}"},
-  "extra_info": {"split": "train", "index": 142, "reference": "class Solution: ...", "prompt": "...", "dataset": "LeetCodeDataset"}
+  "reward_model": {"style": "rule", "ground_truth": "{\"prelude\": \"from typing import * ...\", \"functional\": \"def check(candidate):\\n    assert candidate(nums = [-2,1,-3,4,-1,2,1,-5,4]) == 6\\n ...\\n\\ncheck(Solution().maxSubArray)\"}"},
+  "extra_info": {"split": "train", "index": 142, "reference": "class Solution: ...", "prompt": "...", "dataset": "LeetCodeDataset",
+                 "task_id": "maximum-subarray", "question_id": 53, "source_file": "...v2-rl-problems.jsonl", "source_line_1_based": 143,
+                 "gt_contract": "prelude+solution+functional/v1", "test_version": "leetcode-examples", "added_case_ids": [],
+                 "perf": {"spec": {"arg": "nums", "size": 100000, "seed": 20261107, "lo": -10000, "hi": 10000},
+                          "entry": "Solution().maxSubArray", "time_limit_ms": 500, "expected": "2532688"}}
 }
 ```
 
 三件事：
 
-1. **造 prompt**：系统提示要求 `<think>…</think><answer>…</answer>`；用户消息 = 固定一句话「用自包含代码块解题」+ `meta.query`（描述+签名）+ **约束段**（`--append_constraints` 从完整题面解析、规范化后追加，1890 题自动成功 1846 题，`105`→`100000` 自动修复）。不拼 imports，所以模型必须自己写 `from typing import List`；**样例永不拼进 prompt——它就是判分依据**。边界与理由见[第 ① 站](#station-1)和 [01 的 actor prompt](01_数据理解与GT构建.md#actor-prompt)。
-2. **造 GT**：`test` 原文 + 两个换行 + `check(Solution().maxSubArray)`，整体 `json.dumps` 成一个字符串放进 `reward_model.ground_truth`。GT 就是「断言 + 调用入口」，不是参考代码。GT 也不拼原始 `prompt` 前缀：本题没影响，但 1890 道 LeetCode 训练题里有 121 道树和链表题，测试调用前缀里的 `tree_node`、`is_same_tree` 等辅助函数，在 Code-R1 里必然 `NameError`，正确解也只拿 0.1，见 [01 的内部审查例子](01_数据理解与GT构建.md#internal-external-review)。源码补强版 `coder1_plus` 已修好这一点，见[反向补充源码](examples/source-supplements/README.md)。
-3. **记履历**：`extra_info` 存 split、index、参考解、纯文本 prompt、来源名。`index` 是过滤去重后训练集里的位置，不是原文件行号；这条记录恰好也是 142，因为 v2 RL 与 v2 SFT 本来就是 945 + 945 道互不重复的题，且都不与 v2 test 的 `question_id` 相交，过滤和去重一行都没删掉。判分时只会读 `extra_info.prompt` 用来打日志。
+1. **造 prompt**：系统提示要求 `<think>…</think><answer>…</answer>`；用户消息 = 固定一句话「用自包含代码块解题」+ `meta.query`（描述+签名）+ **约束段**（`--append_constraints` 从完整题面解析、`105`→`100000` 自动修复，1890 题成功 1846 题）。不拼 imports，模型必须自己写 `from typing import List`；**样例永不拼进 prompt——它就是判分依据**。边界与理由见[第 ① 站](#station-1)和 [01 的 actor prompt](01_数据理解与GT构建.md#actor-prompt)。
+2. **造 GT**：GT 带 `prelude`（原始前缀，树/链表题的辅助函数在这里）+ `functional`（`test` 断言 + `check(入口)`），整体 `json.dumps` 成字符串放进 `reward_model.ground_truth`。GT 是「断言 + 调用入口」，不是参考代码。`data_source=code_plus` 让判分路由到补强判分器。
+3. **记履历**：`extra_info` 存 12 个字段——原版 5 项（split、index、参考解、纯文本 prompt、来源名）加追溯 7 项（`task_id`、`question_id`、来源文件与行号、GT 契约版本、测试版本、追加用例清单），标定过的题再加 `perf`（每题时限等，见[第 ④ 站](#station-4)）。`index` 是过滤去重后的训练集位置，不是原文件行号。这正是「判分器一对多、题目特异性走数据字段」的活例子：GT 如此，每题时限也如此。生成链路：`coder1_plus_perf.py` 标定出 `perf-index.jsonl` → `coder1_plus.py --perf_index` 并进数据行。
 
-**补强版的 extra_info（2026-11-08 起完整）**：在原版 5 个字段之外再存追溯字段（`task_id`、`question_id`、来源文件与行号、GT 契约版本、测试版本）；性能轮标定过的题还多一个 `perf` 字段——`{"spec": {"size": 100000, "seed": ...}, "entry": "Solution().maxSubArray", "time_limit_ms": 500, "expected": "..."}`。这正是「判分器一对多、题目特异性走数据字段」的活例子：GT 如此，每题时限也如此。生成链路：`coder1_plus_perf.py` 标定出 `perf-index.jsonl` → `coder1_plus.py --perf_index` 并进数据行。
+同时做去重和划分：合并 v2 RL 与 v2 SFT，排除 v2 test 的 `question_id`，同 ID 只留第一次出现，得到 1890 道题；训练读 parquet 前注意目录名与脚本路径要对齐（见[bad case 库 BC-06](bad_case登记表.md#layer-data)）。
 
-同时做了去重和划分：合并 v2 RL 与 v2 SFT，排除 v2 test 的 `question_id`，同 ID 只留第一次出现，得到 1890 道题（README 说的「2K LeetCode」）；与 TACO 的约 10K 条合并、打乱后写成 parquet，目录名形如 `data/code-r1-12k-leetcode2k-taco/`，而 `main_grpo.sh` 读的是 `data/code-r1-12k/`，用前要对齐路径。
+**口述：** 预处理把「题面+约束」交给 prompt、把「前缀+断言+入口」打包成 GT 字符串、把「参考解与全程追溯」放进履历；三者消费者不同，不能混用。
 
-**口述：** 预处理把「题面」交给 prompt、把「断言 + 入口」打包成 GT 字符串、把「参考解」放进履历；三者消费者不同，不能混用。
-
-源码：`coder1.py` 的 `process_fn`（`:305-335`），`dataset_makes=[leetcode2k, taco]`（`:359`）。九步数据准备流水线见 [01 的全景](01_数据理解与GT构建.md#pipeline-1)。
+源码：`coder1_plus.py` 的 `build_row`/`build_ground_truth`；上游对照 `coder1.py:leetcode2k()` 的历史差异见[bad case 库](bad_case登记表.md)。九步数据准备流水线见 [01 的全景](01_数据理解与GT构建.md#pipeline-1)。
 
 <a id="station-3"></a>
 
@@ -162,22 +164,31 @@ class Solution:
 
 <a id="station-4"></a>
 
-## 第 ④ 站 判分：一个回答怎样变成 -1.1 / 0.1 / 1.1
+## 第 ④ 站 判分：一个回答怎样变成 reward
 
-`PrimeRewardManager` 用线程池对 256 个回答逐个调用 `coder1._compute_score`，每个回答走四步：
+`PrimeRewardManager` 用线程池对 256 个回答逐个调用判分器，每个回答走四步：
 
 | 步骤 | 做什么 | 失败时 |
 |---|---|---|
-| 1 格式检查 | strip 后必须以 `<think>` 开头、`</answer>` 结尾 | 返回 **-1.1** |
-| 2 抽代码 | 取最后一个 `<answer>` 里的所有代码块，拼起来 | 没代码块也是 **-1.1** |
-| 3 拼程序 | `候选代码 + "\n" + GT 的 functional`，即代码后面跟着 `check(...)` 的断言 | |
-| 4 沙箱执行 | firejail 里 `python3 -c 程序`，30 秒、4 GB 内存、禁网；退出码 0 算成功 | 非 0 返回 **0.1**；成功返回 **1.1** |
+| 1 格式检查 | strip 后必须以 `<think>` 开头、`</answer>` 结尾 | 无标签 → 抽代码退回最后一个完整代码块，格式记 −0.1 |
+| 2 抽代码 | 优先取最后一个 `<answer>` 里的代码块；无标签时退回整段最后一个完整块 | 抽不出 → 直接 −0.1 |
+| 3 拼程序 | `prelude + 候选代码 + 断言`（受保护协议：期望答案不进候选进程，子进程逐条上报） | |
+| 4 沙箱执行 | firejail 里 `python3 -c 程序`，30 秒、4 GB 内存、禁网；带 `perf` 字段的题正确性通过后再跑性能轮 | 见下表 |
 
-0.1 = 格式分，1.1 = 格式分 0.1 + 正确分 1.0。管理器层面若单个回答超 600 秒或抛异常，回填 **0.0**。
+**档位（字典序 + 瑕疵并罚）：正确性是主键，格式与性能是次键。**
 
-**本仓库判分器的完整档位（2026-11-06/07 定案）**：字典序四档——对+标签 1.1、对+无标签 0.9、错+标签 0.1、错 −0.1；性能轮再加一维——正确性通过后跑每题标定的大输入（每题 `time_limit_ms` 来自数据行字段，判分器本身是一对多的通用机器），超时或输出不符记性能瑕疵扣 0.2：对+快 1.1、对+一项瑕疵 0.9、对+两项 0.7；错答不触发。见 [02 的 reward 档位](02_Verifier与任务池验收.md#reward-levels-2)与[补强项 9/10](examples/source-supplements/README.md)。
+| 档位 | 条件 |
+|---:|---|
+| 1.1 | 对 + 标签合格 +（有性能标定时）限时内跑完大输入 |
+| 0.9 | 对，但有一项瑕疵：无严格标签，或性能轮超时/输出不符 |
+| 0.7 | 对，但两项瑕疵都有 |
+| 0.1 | 错 + 标签合格（断言失败/报错/超时都是这档） |
+| −0.1 | 错或无代码 + 无标签 |
+| 0.0 | 管理器兜底：判题基础设施故障——不是成绩，正确处理是重试后整组作废 |
 
-课程有 6 个固定候选，判分结果如下。课程的 GT 在 3 条 seed 之外补了 5 条诊断断言：
+任何对答严格高于任何错答。性能轮的每题 `time_limit_ms` 来自数据行字段（判分器是一对多的通用机器，题目特异性全在数据行），离线标定、同题各步不漂移。判题故障、提前退出骗分、格式边际倒挂等已知异常的识别方法见[bad case 库](bad_case登记表.md)。
+
+课程有 6 个固定候选（`run_demo.py` 演示钉 legacy 口径与推演基线一致，映射到现版档位如下；课程的 GT 在 3 条 seed 之外补了 5 条诊断断言）：
 
 | 候选 | 做了什么 | reward | 判分日志里的证据 |
 |---|---|---:|---|
@@ -397,7 +408,7 @@ $PY -B RLVR学习资料/examples/maximum-subarray/mechanism_lab.py
 | 2026-10-14 | 00 开头的阶段对应补上第 ③ 站：采样属于 03。01 的九步改用 1 到 9 编号，作业对应和正文直接写步骤名 | 重新带学 01 时发现：00 开头漏了 ③；01 开头说「对应第 ① ② 站」，几行后的 ② 却指「抽取 metadata」，两套圈号容易混 |
 | 2026-10-14 | 00 开头新增「纵览」：一步训练做什么、七站的进出与所在篇、四篇各答什么问题、本机能跑到哪一步；原来开头那行「与四阶段的对应」并入纵览。01 开头新增「总览」和「文字版导读」：原来的「这一篇解决什么」「怎么学」并入总览，全景里的「九步与作业的对应」移到总览 | 用户要求把带学时的纵览记进 00、01 总览和文字版讲解记进 01，只记按最新源码和资料核对过的版本；以后每学一篇 0x 都按这个流程 |
 | 2026-10-14 | 写入前逐条复核，并修正旧说法：「三条正数 seed」改成「三条 seed 的答案都是正数」（00、01、主框架）；「原版文件不动」改成「原版预处理和判分文件不改，只在判分路由和训练入口各加一个分支」（首页、01）；全量变异审计复跑后，2013 题、17306 个变异体更新为 2014 题、17316 个，补强版契约下训练集通过数从 1876 更新为 1877（01、主框架、反向补充源码 README）。复核依据：重跑 `run_demo.py all`、2090 题 GT 契约对照、全量变异审计、typing 在 3.12 与 3.14 的对照和数据统计 | 种子输入里有负数，只有答案是正数；补强版实际在两个原版文件里各加了 4 行；补强项 4 上线后 `word-ladder-ii` 稳定通过，进入了审计 |
-| 2026-10-15 | 02 按 01 的结构重排：开头新增总览 `overview-2` 和文字版导读 `guide-2`；概念五节为三个角色、判分七步、reward 三档、执行边界的四个缺口与补强版、任务池与五层归因；三项作业改成编号步骤，各加「检查是否学会」与折叠的参考要点；面试深挖从 6 行扩到 10 行；新增 60 秒口述、按需读源码、完成记录。删掉「另次 audit」「合同错配」「受控变异回归」「指标分母」等说法；执行量例子从教学设定 B=8、G=4、M=3 换成 Code-R1 的实际情况：函数题每步 256 次程序执行。00 纵览里 02 的链接改指 `overview-2`，首页 02 一行改写 | 开始学 02；02 还是旧布局，句子密、缩写多，不便口述 |
+| 2026-10-15 | 02 按 01 的结构重排：开头新增总览 `overview-2` 和文字版导读 `guide-2`；概念五节为三个角色、判分七步、reward 档位、执行边界的四个缺口与补强版、任务池与五层归因；三项作业改成编号步骤，各加「检查是否学会」与折叠的参考要点；面试深挖从 6 行扩到 10 行；新增 60 秒口述、按需读源码、完成记录。删掉「另次 audit」「合同错配」「受控变异回归」「指标分母」等说法；执行量例子从教学设定 B=8、G=4、M=3 换成 Code-R1 的实际情况：函数题每步 256 次程序执行。00 纵览里 02 的链接改指 `overview-2`，首页 02 一行改写 | 开始学 02；02 还是旧布局，句子密、缩写多，不便口述 |
 | 2026-10-15 | 写入前逐条复核 02 的说法：重跑 `run_demo.py score`、`practice.py score` 与 `--bad-format`、补全负输入、blind 题包（只用 seed 54、55）、`verify_judge_and_selection.py`；用原版判分器实跑草稿代码块、开头寒暄和 strip 比较；读四个执行后端和奖励管理器源码。新写进资料的事实：四个后端都按退出码判成功，kira 只看 stderr；docker 后端不关网络，stdout 与 stderr 混在一起，`finally` 里强制删容器；管理器超时后线程池退出时仍会等线程；标准输入输出题并发执行、按完成先后判；`minimize_stdio` 按输入大小只留最小的 8 条；TACO 的 split 循环遍历整个数据集、改的是临时字典；两处「参考解」不是同一份程序 | 用户要求写进资料的内容都按源码和资料的最新状态核对过 |
 | 2026-10-15 | 可跑性评估：在仓库副本里重跑资料写到的全部 CPU 命令，全部能跑；新增 `source-supplements/verify_reward_manager_cpu.py`，在装了 torch 2.4.0 CPU 版的 venv 里整体跑通原版与补强版奖励管理器，supplements README 的补强项 6 改为「CPU 整体已验证，firejail 分支与接入训练待 Linux」，并写明 venv 命令和 `--parquet` 已实跑 | 用户要求评估源码和作业哪些能在 CPU 跑、哪些不能、要补什么；补强项 6 原来写「整体待 Linux 实跑」，现在有了 CPU 证据 |
 | 2026-10-15 | `examples/training/README.md` 的单卡 smoke 命令：路径值加单引号；新增「实跑前必查」五条（中文路径、单卡用 vLLM 0.6.3、先下载模型、firejail 探针、1 步时 lr=0）；写明 `--cfg job --resolve` 在 Mac 的 venv 里就能做 | 可跑性评估时在 venv 里实测：路径含「学习资料」不加引号，Hydra 解析阶段就报错；加引号后整条命令的配置能展开 |
@@ -416,11 +427,12 @@ $PY -B RLVR学习资料/examples/maximum-subarray/mechanism_lab.py
 | 2026-10-19 | 03 按 01、02 的结构重排：总览 `overview-3`、导读 `guide-3`，概念五节（前置自测、采样与分组、reward 到 advantage、从 logits 到更新、本版本的运行态），动手前工具、三项作业、60 秒口述、面试深挖（加「这套脚本里 clip 真的起作用吗」「熵系数和回答长度」两问）、有资源后、按需读源码、完成记录；把 CLAUDE.md 第 7 节的 mini-batch 语义错配、ratio 恒 1、梯度缩放、首步 lr=0 并入「运行态」一节并注明 v0.4.1 的差别；外部锚点不变 | 用户要求 03/04 重排并给出总览与文字版介绍 |
 | 2026-10-19 | 04 按同样结构重排：总览 `overview-4`、导读 `guide-4`，概念五节（四种证据、评测口径、协议先锁、一步真实更新、故障归因），把 05 的第六、七环当沙盘引用，补 v0.4.1 指标名、单卡 vLLM 0.6.3、续训去 `data.pt`、去污染与 held-out；三项作业只留操作与交付；综合通关、口述、面试深挖（加 held-out、配对净胜两问）、按需读源码、完成记录；外部锚点不变。01、02 的布局复核无需改动 | 同上 |
 | 2026-10-19 | 新增《专题索引_任务构造与沙箱》：Task 选取/筛选/构造、GT 构造、expected/oracle/测试扩展、Sandbox 四个专题各在哪篇哪节、哪个补强项、哪个源码文件，按先读 → 深读 → 补强版 → 代码与工具 → 本课的数字列出；首页和 CLAUDE.md 登记 | 用户要求用一个文件维护这四个专题的位置 |
-| 2026-11-06 | 补强项 9：`coder1_plus` 奖励分值改为字典序（正确性 1.0/0、格式 ±0.1、宽松提取、`CODER1_PLUS_REWARD=legacy` 复现原版口径），修掉「整洁的错答压过不整洁的对答」的倒挂；02 的 reward 三档加尾注、面试表加一行，专题索引与 CLAUDE.md 登记；两个推演生成器钉 legacy 后重算 your-run，与 git 基线逐行一致（仅 gzip 时间戳差异）；单元测试 23 项、verify 脚本三检查、管理器端到端 `[1.1, 0.1, 0.1, 0.9]` 全过 | 用户要求审视奖励设置是否合理、不合理就改并给出理由 |
+| 2026-11-06 | 补强项 9：`coder1_plus` 奖励分值改为字典序（正确性 1.0/0、格式 ±0.1、宽松提取、`CODER1_PLUS_REWARD=legacy` 复现原版口径），修掉「整洁的错答压过不整洁的对答」的倒挂；02 的 reward 档位加尾注、面试表加一行，专题索引与 CLAUDE.md 登记；两个推演生成器钉 legacy 后重算 your-run，与 git 基线逐行一致（仅 gzip 时间戳差异）；单元测试 23 项、verify 脚本三检查、管理器端到端 `[1.1, 0.1, 0.1, 0.9]` 全过 | 用户要求审视奖励设置是否合理、不合理就改并给出理由 |
 | 2026-11-07 | 补强项 10（性能轮）：判分器补每题时间复杂度约束——数据侧 `coder1_plus_perf.py` 离线标定（Constraints 解析规模上界、上标丢失 `105`→10^5、参考解实测 ×3 得 `time_limit_ms`），判分侧 `perf.py` 在正确性通过后加跑大输入（种子确定性重建），超时/不符降 0.9 档（瑕疵并罚：1.1/0.9/0.7）；`sandbox.py` 补 Windows local 后端兼容。验证：`verify_perf_round.py` 15/15（Polygon 式正负对照），既有套件 23/23。设计依据：CodeContests 每题 `time_limit` 数据字段、Polygon 预期解标定+慢解负对照 | 用户要求给 verifier 加时间复杂度约束并调整奖励；讨论定案「约束解析定规模 + 参考解实测定时限，离线一次性标定」 |
 | 2026-11-07 | 02 新增「传统 CS 知识补充」章（锚点 `cs-2`）：进程/子进程/fork/进程组、文件描述符与 nofile/fsize、rlimit 五道闸逐参数对应作恶方式、墙钟 vs CPU 时间、三层时限、地址空间 vs 物理内存、沙箱后端谱系（firejail/seccomp/sandbox-exec/Docker）、三种隔离机制维度辨析、确定性种子/标定/正负对照（补强项 10 引入），附串讲图；格式按 Shopping-Agent 01 第十一段的方法（分组表 + 统一「隔离考场」场景 + 定义/人话 + 关系辨析） | 用户不是传统 CS 科班，要求补判分与沙箱层的参数级概念（沙箱、firejail、nproc=32、nofile=32、fsize=2m、as=4096m、timeout=30s 等） |
 | 2026-11-07 | 其余五篇各建「传统 CS 知识补充」章（锚点 `cs-00`、`cs-1`、`cs-3`、`cs-4`、`cs-5`），与 `cs-2` 同格式、术语按「首次出现的篇详写、后续互链」分配：00 数据与训练底座（JSONL/parquet/schema/聊天模板/token/左填充/uid/温度/贪心/checkpoint/前向反传），01 入库与判定（主键去重/split/数据泄漏/脏数据/列式存储/assert/浮点容差/交叉验证/变异测试），03 张量与训练工程（shape/mask/广播/masked_mean/no_grad/优化器状态/梯度累积/bf16/driver），04 存档与分布式（checkpoint 五件套/RNG 状态/state_dict/offload/Ray rank/NCCL/FSDP/held-out/预注册/配对比较），05 GPU 与推理引擎（HBM/tmpfs/参数字节账/训练态三份/KV cache/TP/vLLM sleep-wake/吞吐延迟/卡时，全部标推演口径） | 用户确认 02 的章后要求「给其他篇也改了」；本仓此前不含 11-04 的 CS 章（在未合流的另一条线上），本次为从零新建 |
 | 2026-11-07 | 三条讨论定案同步进正文：① prompt 装什么的三条边界（描述给全、约束该给、样例永不给——LeetCode 的 test=题面样例，给样例即泄露判分依据）写进 01 的 `actor-prompt` 节、主框架 `task-preparation` 章、专题索引；② 判分器一对多架构（通用判分器 + 题目特异性走数据字段；CodeContests 每题 `time_limit` 字段、Polygon 出题标定的同构）写进 02 的 `reward-levels-2` 节；③ 补强项 10 性能轮的新档位（瑕疵并罚 1.1/0.9/0.7、空间只做限额护栏）同步进 02 的 `reward-levels-2`、专题索引与 CLAUDE.md 第 6 节 | 用户核对三个讨论结论是否已全部落盘；按「全局一致」规矩补齐正文层（此前只有登记层） |
+| 2026-11-08 | 彻底单版本叙事（用户定案，D11 升级）：00 站②整节重写为现版管线（coder1_plus 三件事 + 真实样本行示例含 code_plus/prelude/12 字段 extra_info/perf）；00 站④与 02 的 reward 表由「legacy 三档 + 扩展段」翻转为现版档位单表（1.1/0.9/0.7/0.1/−0.1/0.0 兜底），历史口径只留一句指向 bad case 库；全仓「reward 三档」措辞同步为「reward 档位」。原则：md 只写现版完整内容，差异记 bad case，版本史交 git | 用户：不要保留原版设计再补现版段——会先读到错误的学习内容；理解后执行 |
 | 2026-11-08 | 新增《bad_case登记表》：把 legacy/plus 口径间值得记录的判分差异做成训练归因库（BC-01~18，五层 × 五要素 + 症状速查表），典型如 BC-01 树/链表 121 题正确解恒 0.1（用户点名案例）与 BC-07 sys.exit(0) 骗满分；归因铁律"参考解同分即环境实锤"；训练前预检指向 verify_gt_contract.py；CLAUDE.md §5 与定案表登记 | 用户：训练后做 bad case 分析要先分清 RL 环境问题还是训练策略问题 |
 | 2026-11-08 | 叙事规则更新（用户定案，记入定案表 D11）：讨论方案直接落现版源码、叙述不分原版现版。按新口径重写教学主线的约束表述（00 站①②/口述/全景图/站④档位/复现节，01 actor-prompt/字段表/作业要点/口述，02 档位引导句，主框架三条边界，专题索引），并修正 01 作业要点 4 与定案 D1 的矛盾（「公开样例可以给」→「样例不进 prompt」）；`coder1_plus.py --append_constraints` 即该规则的首次落地（1846/1890）。CLAUDE.md 协作约定同步 | 用户：「直接说约束给了就行，不要再纠结原版还是现版」「讨论的方案都直接落实到现版源码里」 |
 | 2026-11-08 | 系统性核对（依《设计定案表》）：发现补强管线 prompt 从未加约束（D1 未落地到代码），`coder1_plus.py` 加 `--append_constraints`（解析 Constraints 规范化追加，1846/1890 成功、`105`→`100000` 修复、默认关闭保单变量对照；回归 23/23 + perf 15/15）；全仓 12 处「约束没给」表述逐一核对、5 处精确化（00 站①②、01 字段表/作业/口述、专题索引）；主框架 reward-mapping 加补强版档位段；02 加缺口 5 与「复杂度约束只是提示」段；00 站②加补强版 extra_info 对照；01 schema 加补强版行 | 用户指出表述与定案矛盾，要求先固定方案再逐篇核对 |

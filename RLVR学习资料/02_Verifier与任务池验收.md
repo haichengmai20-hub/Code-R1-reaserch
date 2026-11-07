@@ -18,7 +18,7 @@
 
 | 段 | 包含的小节 | 学完能回答什么 |
 |---|---|---|
-| 概念 | [三个角色](#prerequisites-2)；[判分七步](#pipeline-2)；[reward 三档](#reward-levels-2)；[执行边界](#execution-gaps-2)；[任务池](#task-pool-2) | 谁输入什么、输出什么；一个回答经过哪几步变成分数；每个分数证明了什么；原版有哪些缺口、补强版怎么堵；数据行怎样读回、出错怎样归层 |
+| 概念 | [三个角色](#prerequisites-2)；[判分七步](#pipeline-2)；[reward 档位](#reward-levels-2)；[执行边界](#execution-gaps-2)；[任务池](#task-pool-2) | 谁输入什么、输出什么；一个回答经过哪几步变成分数；每个分数证明了什么；原版有哪些缺口、补强版怎么堵；数据行怎样读回、出错怎样归层 |
 | 动手 | [动手前的工具说明](#tools-2)；作业 [2.1](#assignment-2-1)、[2.2](#assignment-2-2)、[2.3](#assignment-2-3) | 6 个固定候选怎样拿到各自的分；改一个条件后分数怎么变；不看答案能不能把故障定位到层 |
 | 自测 | [60 秒口述](#oral-2)；[面试深挖](#interview-2)；[按需读源码](#source-reading-2)；[完成记录](#record-2) | 能不能脱稿讲清楚，能不能扛住追问 |
 
@@ -26,7 +26,7 @@
 
 概念和作业的对应：
 
-- 2.1 覆盖判分七步和 reward 三档：用固定示范看 6 个候选怎样拿到各自的分。
+- 2.1 覆盖判分七步和 reward 档位：用固定示范看 6 个候选怎样拿到各自的分。
 - 2.2 覆盖执行边界：在自己的 data-01 上改一个条件，看分数怎么变，再看提前退出的漏洞和补强版。
 - 2.3 覆盖任务池：不看答案给 8 条记录定位故障层，再读回自己的小池。
 
@@ -60,14 +60,14 @@
 
 要记住的判断：函数题里没有「比较输出」这一步，断言和候选代码在同一个程序里，断言失败只通过退出码非 0 传回来。详见[判分七步](#pipeline-2)。
 
-**第三节：reward 三档，每个数字证明了什么。**
+**第三节：reward 档位，每个数字证明了什么。**
 
 - -1.1：没按协议交卷。它不说明算法对错。
 - 0.1：格式合格，但执行失败。它不区分算法错、漏写导入、超时和后端故障。
 - 1.1：格式合格，程序以退出码 0 结束。它不证明断言跑完了，也不证明测试够。
 - 0.0：不是判分器给的，是奖励管理器超时或出错时的兜底值，却会进入组内统计。
 
-课程的 6 个固定候选正好覆盖这几种情况：两个正确解 1.1，两个错解 0.1，格式错 -1.1，提前退出的 `early_exit` 也是 1.1。详见 [reward 三档](#reward-levels-2)。
+课程的 6 个固定候选正好覆盖这几种情况：两个正确解 1.1，两个错解 0.1，格式错 -1.1，提前退出的 `early_exit` 也是 1.1。详见 [reward 档位](#reward-levels-2)。
 
 **第四节：执行边界，原版的四个缺口。**
 
@@ -140,20 +140,24 @@
 
 <a id="reward-levels-2"></a>
 
-## reward 三档：每个数字证明了什么
+## reward 档位：每个数字证明了什么
 
 | 分数 | 什么时候出现 | 证明了什么 | 没有证明什么 |
 |---:|---|---|---|
-| -1.1 | 格式不合格，或者抽不到代码 | 没按提交协议交卷 | 不说明算法对错 |
-| 0.1 | 格式合格，执行失败 | 格式分保留；有断言失败、报错或超时 | 不区分算法错、漏写导入、超时和后端故障 |
-| 1.1 | 格式合格，程序以退出码 0 结束 | 格式分 0.1 加正确分 1.0 | 不证明断言真的跑完了，也不证明测试够 |
-| 0.0 | 奖励管理器等待超时或出错 | 这次判分没有完成 | 不是正确性标签，却照样进入组内均值和标准差 |
+| 1.1 | 对 + 标签合格 +（有性能标定时）限时内通过大输入 | 正确性 1.0 + 格式 0.1（+ 性能达标） | 不证明断言真的跑完了、测试够、也未必是独立能力（见下） |
+| 0.9 | 对，但有一项瑕疵：无严格标签，或性能轮超时/输出不符 | 逻辑正确；格式或速度有缺口 | 无标签时也可能是抽代码抽到了能跑的片段 |
+| 0.7 | 对，但格式与性能两项瑕疵都有 | 同上叠加 | 同上 |
+| 0.1 | 错 + 标签合格（断言失败、报错、超时、缺库） | 按提交协议交了卷 | 不区分算法错、漏写导入、超时、缺库和后端故障 |
+| −0.1 | 错或无代码 + 无标签 | 没交出有效卷面 | 同上 |
+| 0.0 | 奖励管理器等待超时或判题故障 | 这次判分没有完成 | 不是正确性标签；正确处理是重试后整组作废，不进组内统计 |
 
-上表是判分的兜底语义；本仓库判分器的完整档位在此基础上扩展（2026-11-06/07 定案）：
+三条设计原则（2026-11-06/07 定案，来龙去脉见[设计定案表](设计定案表.md)）：
 
-- **架构先说清：判分器是一对多的通用机器**。一个 `coder1` 服务全部 1890 题，题目特异性全部走**数据行字段**——GT 断言如此，补强项 10 的每题 `time_limit_ms` 也如此（业界同构：CodeContests 数据集每题带 `time_limit` / `memory_limit_bytes` 字段，AlphaCode 评测读它；Codeforces 判题机读每题配置）。换题不换判分器，换数据行就行。
-- **补强项 9（字典序）**：正确性 1.0/0 是主排序键，格式 ±0.1 是次键——对+标签 1.1、对+无标签 0.9、错+标签 0.1、错−0.1；任何对答严格高于任何错答。
-- **补强项 10（性能轮）**：reward 只测输出时，O(n²) 与 O(n) 的正确回答同分，RL 学不会「写快」。带 `extra_info.perf` 标定值的数据行在正确性通过后加跑大输入（每题 timeout=参考解实测×3，离线标定），超时/不符记性能瑕疵扣 0.2：对+快+标签 1.1、对+一项瑕疵（慢或无标签）0.9、对+两项 0.7。错答不触发。空间复杂度只做**限额护栏**（`as=4096m` 超限=memory_error=0.1），不设奖励档——Python 解释器基线约 30MB 淹没 O(1)/O(n) 空间信号，且 LLM 写出爆内存解是低频事件，详见[补强项 10](examples/source-supplements/README.md#supplement-10)。
+- **架构先说清：判分器是一对多的通用机器**。一个判分器服务全部 1890 题，题目特异性全部走**数据行字段**——GT 断言如此，每题 `time_limit_ms` 也如此（业界同构：CodeContests 数据集每题带 `time_limit` / `memory_limit_bytes` 字段，AlphaCode 评测读它；Codeforces 判题机读每题配置）。换题不换判分器，换数据行就行。
+- **字典序**：正确性 1.0/0 是主排序键，格式 ±0.1 与性能瑕疵 −0.2 是次键——任何对答严格高于任何错答。性能轮只对正确性通过者加跑（自动课程：早期全错时性能轮不激活）。
+- **空间复杂度只做限额护栏**（`as=4096m` 超限=memory_error=0.1），不设奖励档——Python 解释器基线约 30MB 淹没 O(1)/O(n) 空间信号，且 LLM 写出爆内存解是低频事件，详见[补强项 10](examples/source-supplements/README.md#supplement-10)。
+
+历史口径（−1.1/0.1/1.1 三档、格式门早退）的异常症状与识别见[bad case 库](bad_case登记表.md)；`CODER1_PLUS_REWARD=legacy` 仅供推演产物复现基线。
 
 课程的 6 个固定候选，在示范的 8 条接受测试上，2026-10-15 实测结果：
 
@@ -276,7 +280,7 @@
 
 ## 作业 2.1：完整示范——原 scorer 怎样给分
 
-**目的：** 把格式、代码、GT、执行结果和最终分数对到具体代码上。对应[判分七步](#pipeline-2)和 [reward 三档](#reward-levels-2)。
+**目的：** 把格式、代码、GT、执行结果和最终分数对到具体代码上。对应[判分七步](#pipeline-2)和 [reward 档位](#reward-levels-2)。
 
 ```bash
 $PY -B RLVR学习资料/examples/maximum-subarray/run_demo.py score
@@ -284,7 +288,7 @@ $PY -B RLVR学习资料/examples/maximum-subarray/run_demo.py score
 
 **操作：**
 
-1. 打开[报告](examples/maximum-subarray/outputs/report.json)的 `score.candidates`，对照 [reward 三档](#reward-levels-2)一节的候选表，确认 6 个候选的分数。
+1. 打开[报告](examples/maximum-subarray/outputs/report.json)的 `score.candidates`，对照 [reward 档位](#reward-levels-2)一节的候选表，确认 6 个候选的分数。
 2. 挑两个结果不同的候选，例如 `wrong_empty` 和 `early_exit`，逐项写出：回答的格式、抽出的代码、用的 GT、`source_first_failed_case_id_from_traceback` 里第一个失败的断言、原 reward、`audit_completed_case_count`。
 3. 看 `score.stdio_adapter`：同一题改成标准输入输出形式，stdin 是一行 JSON 数组，期望输出是最大和。正确写法得 1.1，返回总和的错解得 0.1。这是教学改写，原始数据仍是函数题。
 4. 读 [PrimeRewardManager](../verl/workers/reward_manager/prime.py) 的 `single_compute_score`：参数名叫 `reference`，实际传进来的是 GT。`extra_info.reference` 里的参考解不参与判分，也不做文本相似度比较。
@@ -506,7 +510,7 @@ rlimit 不是劝告，是**内核执行的物理围栏**：进程越线，操作
 |---|---|---|
 | reward 是 1.1 就是通过了吗？ | 不是。1.1 只说明格式合格、程序以 0 退出。`early_exit` 在断言前 `sys.exit(0)` 也拿 1.1；`wrong_empty` 在 3 条正数答案的 seed 上也拿 1.1。前者是测试没跑，后者是测试不够。补强版的受保护协议下，提前退出表现为结果缺失，判 0.1 | [_compute_score](../verl/utils/reward_score/coder1/__init__.py)，[反向补充源码](examples/source-supplements/README.md) |
 | Sandbox 和 Verifier 为什么要分开验收？ | 沙箱管「跑得安全」：权限、网络、资源、超时；判分器管「判得对」：测试是否执行完、比较规则是否合理。沙箱再严，`sys.exit(0)` 照样骗过只看退出码的判分器；判分规则再对，沙箱不禁网也不安全 | [主框架的执行边界](RLVR工业流程.md#execution-boundary)，[firejail_exec.py](../verl/utils/reward_score/coder1/firejail_exec.py) |
-| 格式分和正确分谁该更重？ | 正确分：格式只是提取手段，分值要字典序——先比对错、再比整洁。原版格式边际 1.2 > 正确边际 1.0，整洁的错答压过不整洁的对答；补强项 9 改成 1.0 与 ±0.1。同质组内格式学习不受影响：GRPO 组内标准化只看排序 | [reward 三档](#reward-levels-2)、[补强项 9](examples/source-supplements/README.md#supplement-9) |
+| 格式分和正确分谁该更重？ | 正确分：格式只是提取手段，分值要字典序——先比对错、再比整洁。原版格式边际 1.2 > 正确边际 1.0，整洁的错答压过不整洁的对答；补强项 9 改成 1.0 与 ±0.1。同质组内格式学习不受影响：GRPO 组内标准化只看排序 | [reward 档位](#reward-levels-2)、[补强项 9](examples/source-supplements/README.md#supplement-9) |
 | 函数题怎么判对错，比较输出吗？ | 不比较。候选代码后面接着 `check` 断言和 `check(入口)`，作为一个程序执行，断言失败通过退出码非 0 传回。所以只有整体通过或失败，第一条失败后后面的断言不再执行 | [_compute_score](../verl/utils/reward_score/coder1/__init__.py)，[主框架的 Verifier 验收](RLVR工业流程.md#verification) |
 | 漏写 `from typing import List` 报 NameError，算算法错吗？ | 先查提交契约。原生评测器先拼 imports，RL 的拼法不补。同一份 LeetCode 53 写法在 Python 3.12 报错、3.14 通过。算法、依赖和环境的错误要分开归因 | [原生 execution.py](../LeetCodeDataset/leetcote/execution.py)，[主框架的执行边界](RLVR工业流程.md#execution-boundary) |
 | 两套代码提取规则一样吗？ | 不一样。原生评测器取最长的 python 代码块，RL 取最后一个 answer 里的所有代码块拼起来。回答里先放一段会抛异常的草稿时，原版判 0.1，原生评测器能通过 | [extract_completion](../LeetCodeDataset/leetcote/data.py)，[extract_code_from_string](../verl/utils/reward_score/coder1/__init__.py) |
