@@ -246,6 +246,55 @@ $PY -B RLVR学习资料/examples/maximum-subarray/run_demo.py advantage
 
 <a id="oral-3"></a>
 
+<a id="cs-3"></a>
+
+## 传统 CS 知识补充：张量与训练工程的术语串讲
+
+给不是传统 CS 科班的读者的背景补给：把本篇「采样 → advantage → loss → 更新」链路上出现的工程侧术语集中给一遍「定义 + 人话」，统一用「流水线车间」的场景。数学概念（均值/方差/标准差、softmax、KL、链式法则）按读者已有的 RL 基础直接用，不在此重复；格式与 [00 的补充章](00_一条记录从原始Task到训练.md#cs-00)一致。
+
+### 张量工程（本节统一场景：车间里的标准料盒）
+
+| 术语 | 定义 | 人话 |
+|---|---|---|
+| shape (B, R) | 张量的维度说明书：B 个样本 × 每个样本 R 个位置 | 一批 B 个料盒、每盒 R 格。训练里的「批」和「回答长度」就是这两个数：一步 256 个回答、每个最长 4096 格 |
+| ★mask（掩码） | 与数据同形状的 0/1 张量，标出哪些位置参与计算 | 每个料盒盖一张镂空板：有内容的格子露出来算，填充的海绵（padding）和截断位盖住不算。`eos_mask` 标「到 EOS 为止是有效回答」，reward 只写在最后一个有效格 |
+| 广播（broadcast） | 不同 shape 的张量运算时自动补齐维度的规则：标量铺满全批，(B,1) 沿 R 方向复制 | 给整批料盒同时喷一层漆：一个标量 advantage `+0.866` 广播到该回答全部 7 个有效 token，就是每格喷同一个数 |
+| masked_mean | 先逐元素乘 mask 再对有效位求平均 | 只称露出来的格子求平均，海绵不算重量。loss 聚合用它——分母只有有效 token |
+
+### 自动微分与优化器（本节继续用车间的场景：调机与存档）
+
+| 术语 | 定义 | 人话 |
+|---|---|---|
+| no_grad / eval 模式 | 关闭梯度记录的模式：算得快、省显存，但不留「怎么改参数」的账 | 只抄表不记账：old 和 ref 两份 logprob 是**常量**，算完就扔，不参与反传。忘记关的话显存翻倍还慢 |
+| 优化器状态 / step / zero_grad | AdamW 内部存的动量与自适应步长；step=按梯度走一步；zero_grad=清空上一步的梯度 | 老师傅的调机笔记（动量）：每步先清昨天的手记（zero_grad）、按今天的偏差改一刀（step）。**笔记要跟着 checkpoint 一起存**，否则续训的步长全乱 |
+| 梯度累积 | 显存放不下整个 mini-batch 时，分成多个 micro 各算各的梯度、加起来再走一步 | 一次搬不动一垛货，分几趟推车、堆齐了再进电梯。`gradient_accumulation` 是趟数；每趟内部先做 token 平均，最后除以趟数 |
+| bf16（bfloat16） | 16 位浮点格式：指数位与 fp32 同宽、精度低但范围不缩水 | 磅秤换成克秤：数值范围（能称多大多小）不变，刻度粗一点。训练基本都用它，省一半显存与带宽 |
+
+### 运行形态（本节统一场景：总控与车间）
+
+| 术语 | 定义 | 人话 |
+|---|---|---|
+| driver / worker | 分布式程序里的主控进程与干活的从进程 | 调度室与车间：`ray_trainer.py` 在 driver 上发号施令（分组、算 advantage），actor/ref/rollout 各是 worker 车间。谁在哪台上、怎么通信，见 [04 的补充章](04_真实训练与独立评测.md#cs-4) |
+| 指标日志（metrics.jsonl） | 每步把关键数字写成一行 JSON 的事件流 | 车间黑板每班拍照存档：`critic/score/mean`、`actor/entropy` 逐行可回放，曲线图就是把这些行画出来 |
+
+### 一张图把术语串回一步训练
+
+```text
+driver 取 16 题 → vLLM worker 采 16×16 回答（shape 的 B=256，R≤4096）
+    |
+    v  reward 写在每个回答最后一个有效 token（★eos_mask 镂空板标有效位）
+同 uid 分组 → (r-mean)/(std+1e-6) → advantage 标量
+    |           广播：一个数铺满该回答全部有效格
+    v
+actor worker：new logprob（train 模式，记账）
+   old/ref logprob（★no_grad/eval，只抄表不记账）
+    |
+    v  loss = masked_mean(pg + KL + 熵)，梯度分 micro 累积 → AdamW step（bf16 算、留调机笔记）
+driver 收指标写 metrics.jsonl → 交 04 的存档与验证
+```
+
+读图自测：指着图说出 shape、mask、广播、masked_mean、no_grad、梯度累积、bf16、driver 各自落在哪一段；回答「为什么 old/ref 必须关梯度」用一句话。
+
 ## 60 秒口述
 
 一步训练取 16 道题，vLLM 给每题写 16 个回答，同一道题的回答共享一个 uid；回答会按 token 数重排，所以认亲只能靠 uid。判分器给每个回答一个标量，放在它最后一个有效 token 上；同 uid 的 16 个分数减均值、除以样本标准差，就是 advantage，再铺到这个回答的每个 token——4 个候选 `[0.1, 0.1, 1.1, 1.1]` 得到 ±0.866，全同分的组得到全 0，判题故障记成 0.0 会把三条错解推成 +0.5。更新时固定 old、ref、advantage 三个常量，只对当前模型的 new logprob 求导：ratio = exp(new − old) 过 0.2 的 clip，加 0.001 的 KL 和熵项，反传、裁梯度、AdamW 走一步。判题程序不可微没关系，梯度只经过「固定 advantage × 当前概率」这条路。这套脚本每步只更新一次，ratio 恒 1、clip 不触发，要让它起作用得把 mini-batch 改小。

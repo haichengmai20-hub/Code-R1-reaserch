@@ -16,6 +16,7 @@
 | 6 | 基础设施异常不再记 0 分，改成结构化状态加有限次重试，必要时整组作废 | [03 作业 3.2](../../03_Rollout与GRPO机制.md#assignment-3-2) | `verl/workers/reward_manager/infra_policy.py`、`prime_plus.py`、训练入口的 `prime_plus` 分支 | 2026-10-14 完成；2026-10-15 奖励管理器在 macOS CPU 上用 torch 整体跑通；firejail 分支与接入真实训练待 Linux 实跑 |
 | 7 | 和评测集去重；按当前模型的通过率过滤难度 | [01 全景](../../01_数据理解与GT构建.md#pipeline-1)、主框架 A8 | `examples/data_preprocess/coder1_plus_selection.py`、`coder1_plus.py --drop_task_ids/--keep_task_ids` | 2026-10-14 完成：去重用 v1 test 演示；难度筛选的通过率要靠 GPU 真实采样 |
 | 9 | 奖励分值的字典序修正：正确性 1.0/0、格式 ±0.1，无标签时退回最后代码块照样执行；任何对答严格高于任何错答 | [02 的 reward 三档](../../02_Verifier与任务池验收.md#reward-levels-2) | `verl/utils/reward_score/coder1_plus/__init__.py`（`CODER1_PLUS_REWARD=aligned|legacy`） | 2026-11-06 完成，CPU 已验证 |
+| 10 | 性能轮：每题标定 `time_limit_ms`（参考解实测 ×3），正确性通过后加跑大输入，超时/不符降 0.9 档（瑕疵并罚） | [02 的执行边界](../../02_Verifier与任务池验收.md#execution-gaps-2)、2026-11-07 讨论 | `verl/utils/reward_score/coder1_plus/perf.py`、`examples/data_preprocess/coder1_plus_perf.py` | 2026-11-07 完成，Windows local 后端 15/15 + 既有套件 23/23 |
 
 <a id="supplement-1"></a>
 
@@ -253,6 +254,21 @@
 排序断言（min(对答)=0.9 > max(错答)=0.1）、`legacy` 复现 −1.1、奖励管理器端到端 `[1.1, 0.1, 0.1, 0.9]` 全部通过；证据在 `test_source_supplements.py`、`verify_judge_and_selection.py` 的 `reward_scheme` 段和 `verify_reward_manager_cpu.py`。
 
 **诚实边界。** 无 `prelude` 的 GT 分值不变；全同组 advantage 仍为 0（组内无方差时任何分值方案都没有信号）；对「弱测试下懵对拿 1.1」无效——那是数据侧问题，靠补强项 2、3 补测试。05 与 `runs/` 的推演按 legacy 口径生成（生成器已钉环境变量），叙述数字不变；实跑默认 aligned。
+
+<a id="supplement-10"></a>
+
+## 补强项 10：性能轮（每题时间复杂度约束）
+
+**问题。** 原版 reward 只测输出正确性：O(n^2) 与 O(n) 的正确回答同分，GRPO 组内 advantage 也不区分——RL 看不见快慢，可能反向强化「容易写对的暴力解」。而 prompt 里的复杂度约束（`len ≤ 10^5`）只是提示，奖励不认。业界对照：CodeContests 每题带 `time_limit` 数据字段（`contest_problem.proto`）；Codeforces Polygon 出题用「预期解实测 × 系数」标定 TL，并用故意慢的解做负对照验证 TL 确实拒绝它。
+
+**改法。**
+- 数据侧 `coder1_plus_perf.py` 一次性离线标定：从 `question_title` 的 Constraints 解析规模上界（上标丢失按 10 的幂识别：字面 `105` 视作 10^5；覆盖 `n <= 10**5` 与 `5 * 104` 写法），把样例输入放大成大输入（封顶 100,000、下限 1,000），参考解实测墙钟（含进程启动，与沙箱计时同口径，取两次较慢者）×3 得 `time_limit_ms`（下限 500ms），连同确定性种子与期望输出写进 `extra_info.perf`。训练时零标定开销，同题各 step 判分标准不随负载漂移。
+- 判分侧 `perf.py` + `__init__.py`：正确性轮通过且带 `perf` 字段时加跑性能轮——用种子确定性重建大输入，`sandbox.run_python(timeout=time_limit_ms/1000)`；超时或大输入输出不符（规模相关瑕疵）记性能瑕疵。分值为瑕疵并罚制（接补强项 9 的字典序）：性能瑕疵 −0.2，与「对但无标签」并列——对+快+标签 1.1、对+一项瑕疵 0.9、对+两项 0.7，任何对答仍严格高于任何错答。`CODER1_PLUS_REWARD=legacy` 整体跳过（推演口径不变）；infra 故障抛 `InfraError` 走补强项 6 的整组作废。
+- 顺带：`sandbox.py` 补 Windows 兼容——显式选择 `local` 后端时可用（墙钟超时照常，资源限额降级为无；`auto` 在 Windows 仍 unavailable，「不静默降级」不变），供本机教学验证，生产走 Linux firejail。
+
+**验证（2026-11-07，Windows + Python 3.14.6 + local 后端）。** `verify_perf_round.py` 15/15：标定链（`105`→10^5、time_limit_ms=500、expected 非空）、正对照（Kadane 对+快 → 1.1，`perf.status=pass`）、负对照（O(n^2) 暴力小输入全对、大输入超时 → 0.9，`perf.status=slow`，Polygon 慢解标签的对应物）、双瑕疵（暴力+无标签 → 0.7）、错答不触发（wrong_sum → 0.1，无 perf 键）、legacy 跳过（暴力 → 1.1 原版口径）。既有套件 `test_source_supplements.py` 23/23（Windows local 后端下原先 5 个沙箱 error 全部转绿；3 个 skip 是必须真隔离后端的测试）。全量 1890 题标定与树/链表/stdio 题的扩展待做（第一版只支持恰一个 `List[int]` 参数的题）。
+
+**诚实边界。** 计时噪声无法完全消除（并发判分负载抖动），缓解靠 3× 系数、500ms 下限、两次实测取慢；「对但慢 0.9」的语义成立前提是 timeout 标定合理，标定脚本对解析失败/参考解跑不动的题记 `skip_reason` 跳过、不硬造值；真实训练里的组内 advantage 影响只有 Linux GPU 实跑才能验证。
 
 ## 怎样运行
 
