@@ -15,6 +15,8 @@
 3. 判分方自己比较：缺少完成事件、缺少某一条结果、某一条报错或答案不同，都判失败。
    compare 为 unordered_outer 时，列表答案忽略外层顺序。
 候选代码即使伪造了标记和完成事件，也不知道期望答案，伪造不出正确输出；提前退出则表现为结果缺失。
+模型若在回答里定义了同名辅助类/函数（ListNode、list_node 等），exec 后会撤销其覆盖——
+环境定义优先，防止错误的 ListNode 污染 list_node/is_same_list 让正确解被误判（见 bad case BC-24）。
 """
 
 import ast
@@ -105,11 +107,18 @@ def __coder1_list(head):
 
 
 __coder1_emit({{"event": "start", "cases": {count}}})
+# 环境定义优先：模型若定义了同名辅助函数/类（ListNode 等），exec 后撤销其覆盖。
+# 否则模型写错 ListNode 会污染 prelude 的 list_node/is_same_list，让正确解被误判失败。
+__coder1_reserved = {{__name: globals().get(__name) for __name in
+                    ("ListNode", "TreeNode", "list_node", "tree_node", "is_same_list", "is_same_tree")}}
 try:
     exec(compile({solution!r}, "<solution>", "exec"), globals())
 except BaseException as __coder1_error:  # 包括 SystemExit：提前退出是失败，不是通过
     __coder1_emit({{"event": "solution_error", "error": type(__coder1_error).__name__}})
 else:
+    for __coder1_name, __coder1_value in __coder1_reserved.items():
+        if __coder1_value is not None:
+            globals()[__coder1_name] = __coder1_value
     for __coder1_index, (__coder1_call, __coder1_kind) in enumerate({calls!r}):
         try:
             __coder1_out = eval(__coder1_call, globals(), {{"candidate": eval({entry!r}, globals())}})

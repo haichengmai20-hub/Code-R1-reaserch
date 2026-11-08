@@ -157,7 +157,7 @@
 
 ### 门③④内部：拼程序与调用入口（entry_point 如何接上抽取的代码）
 
-判分不「调用」任何神秘的接口——拼一个 Python 程序，最后一行就是调用：`build_program` 按 **prelude → 候选代码 → GT 断言 → `check(入口)`** 拼接，`check(Solution().maxSubArray)` 这一行做三个动作：实例化模型写的类（`Solution()`）、**取方法本身当对象**（`.maxSubArray` 没有第二个括号——绑定方法，`self` 已绑给实例，后续调用只需传业务参数）、把它作为 `candidate` 传进考题函数；`check` 内部的 `candidate(nums=...)` 才真正执行模型代码。判分器因此不知道类名方法名（一对多）：题目特异性全在数据行的 `entry_point` 字符串里。断言（`assert 条件`）是判分点：首败即停、消息定位、结果走退出码。拼接契约的洞——期望答案在候选进程里——由受保护协议堵上：断言拆成「调用+期望」、子进程无期望只打印输出（带 nonce）、判分方进程外比较、逐条全报。完整程序实物与 `sys.exit(0)` 骗分对照见 `extract_walkthrough.py` 同目录的讨论（BC-07）。
+判分不「调用」任何神秘的接口——拼一个 Python 程序，最后一行就是调用：`build_program` 按 **prelude → 候选代码 → GT 断言 → `check(入口)`** 拼接，`check(Solution().maxSubArray)` 这一行做三个动作：实例化模型写的类（`Solution()`）、**取方法本身当对象**（`.maxSubArray` 没有第二个括号——绑定方法，`self` 已绑给实例，后续调用只需传业务参数）、把它作为 `candidate` 传进考题函数；`check` 内部的 `candidate(nums=...)` 才真正执行模型代码。判分器因此不知道类名方法名（一对多）：题目特异性全在数据行的 `entry_point` 字符串里。另有一条隔离规则：模型若在回答里定义了 `ListNode` 等辅助类，exec 后会撤销其覆盖、环境定义优先——否则错误的 ListNode 会污染 `list_node`/`is_same_list`，让正确解被误判（[BC-24](bad_case登记表.md#layer-manager)）。断言（`assert 条件`）是判分点：首败即停、消息定位、结果走退出码。拼接契约的洞——期望答案在候选进程里——由受保护协议堵上：断言拆成「调用+期望」、子进程无期望只打印输出（带 nonce）、判分方进程外比较、逐条全报。完整程序实物与 `sys.exit(0)` 骗分对照见 `extract_walkthrough.py` 同目录的讨论（BC-07）。
 
 受保护协议的事件流实物（2026-11-08 实测，贯穿题两条断言）：
 

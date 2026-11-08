@@ -121,6 +121,14 @@
 - **验证**：crawler.py v1 在 10 题上实测暴露（entry=Solution().__init__）；v2 修复后 10/10，行为层 3/3 PASS。
 - **口径**：上游重建（非训练判分）。**状态**：已修（crawler v2）。训练无关，但重建数据集/写判分器时同类坑会重现。
 
+### BC-24 模型覆盖环境辅助类：正确解被判错（假阴性）
+
+- **症状签名**：链表/树题的正确解稳定拿 0.1，判分日志报 `AttributeError: 'ListNode' object has no attribute 'val'`；rollout 里模型解题逻辑正确，只是顺带自己定义了 ListNode。
+- **根因**：模型回答与 prelude 在同一命名空间执行，模型写的 `class ListNode`（成员名写错或缺字段）覆盖了环境定义；prelude 的 `list_node`/`is_same_list` 依赖环境版 ListNode，于是正确解被判失败。**判分器没算错，是命名空间隔离缺失**——环境侧设计的坑。
+- **验证**：2026-11-08 实测——构造「错误 ListNode + 正确解」，修复前退出码 1、修复后 1.1 passed（`protocol.py` 新增 reserved 恢复）。
+- **口径**：`plus` 与 `legacy` 同源（都拼同一命名空间）。**状态**：已修——exec 前备份 `ListNode/TreeNode/list_node/tree_node/is_same_list/is_same_tree`，exec 后恢复；模型只保留自己的 `Solution`。
+- **训练解读**：这类错会**系统性压低某类题的 reward**（链表/树题），曲线看起来像"模型不会树题"——按归因铁律先查环境（`bad_case` 本表），再怀疑策略。
+
 <a id="layer-manager"></a>
 
 ## 三、奖励管理器层
@@ -217,6 +225,7 @@
 | 一类题两种解读各拿不同分 | 信息缺失 | BC-20 |
 | 同代码不同块序分数翻转 | 提取拼接覆盖 | BC-22 |
 | 重建数据时 entry/多参数/链表题全错 | 爬虫解析器 | BC-23 |
+| 链表/树正确解稳定 0.1 且报 AttributeError | 命名空间污染 | BC-24 |
 
 ## 与其他资产的关系
 
