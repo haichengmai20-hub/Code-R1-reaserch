@@ -16,7 +16,7 @@
 9. 奖励分值的字典序修正（2026-11-06）
    原版口径下格式边际（0.1 对 −1.1，差 1.2）大于正确边际（1.1 对 0.1，差 1.0）：格式合格但错误的回答
    压过格式不合格但正确的回答，而且后者在格式门处直接 −1.1，代码根本不执行。补强版改为：
-   正确性 +1.0 / 其余 0，格式 ±0.1 做次级信号；严格标签缺失时退回整段响应的最后一个完整代码块照样执行。
+   正确性 +1.0 / 其余 0，格式 ±0.1 做次级信号；严格标签缺失时退回整段响应、抽取其中全部完整代码块拼接照样执行。
    四档：对+标签 1.1、对+无标签 0.9、错+标签 0.1、错/无代码+无标签 −0.1。任何含正确解的回答严格高于
    任何不含的。CODER1_PLUS_REWARD=legacy 可复现原版口径（−1.1/0.1/1.1）。没有 ``prelude`` 的 GT 仍委托
    原版判分，分值不变。
@@ -78,7 +78,7 @@ def compute_score_detailed(solution_str, ground_truth, extra_info=None, format_r
         raise ValueError(f"coder1_plus: a ground truth with 'prelude' must also carry 'functional': {list(gt)}")
 
     # 第 9 项：代码抽取与格式分值。strict = 标签合格且 <answer> 里有代码；
-    # fallback = 标签不合格时退回整段响应里的最后一个完整代码块（原版 extract 对无标签串本来就取全文代码块）。
+    # fallback = 标签不合格时退回整段响应、抽取其中全部完整代码块拼接（原版 extract 对无标签串本来就取全文全部代码块）。
     strict = _orig.validate_response_structure(solution_str)
     solution_code = _orig.extract_code_from_string(solution_str)
     extraction = "strict" if strict and solution_code else ("fallback" if solution_code else "none")
