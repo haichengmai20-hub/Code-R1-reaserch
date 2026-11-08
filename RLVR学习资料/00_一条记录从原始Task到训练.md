@@ -166,7 +166,7 @@ class Solution:
 
 ## 第 ④ 站 判分：一个回答怎样变成 reward
 
-`PrimeRewardManager` 用线程池对 256 个回答逐个调用判分器，每个回答走四步：
+`PrimeRewardManager`（现版 `prime_plus`：判题故障先重试、仍失败整组作废）用线程池对 256 个回答逐个调用判分器，每个回答走四步：
 
 | 步骤 | 做什么 | 失败时 |
 |---|---|---|
@@ -204,9 +204,9 @@ class Solution:
 - **原始 GT 抓不住 `wrong_empty`。** 3 条 seed 的答案都是正数（6、1、23），它都返回正确值，只有补了全负输入 `[-3,-2,-5] → -2` 才失败。所以在原始 Code-R1 数据上，这个错解会拿 1.1。这就是 README 说的「reward 假阳性会迷惑模型」。整个 LeetCode 部分都是这样：1890 题的测试全是题面样例，中位数只有 2 条。源码补强版用独立 oracle 核对后给这道题补了 10 条测试，wrong_empty 就被判成 0.1。
 - **退出码 0 不等于跑完了断言。** `early_exit` 在 `check()` 之前就退出，判分器只看到成功。要堵这个洞需要「测试完成证据」，不是换个沙箱就能解决。源码补强版的受保护判题协议已经堵上：期望答案不进候选进程，结果缺失就判失败。
 
-**口述：** 判分 = 格式门 + 把断言拼到代码后面跑一遍 + 看退出码；三档分数里 0.1 不是通过；高分还要问「断言真的跑完了吗、断言本身够不够」。补强版在同一套字典序下扩到四档，并加性能轮（对但慢 0.9）。
+**口述：** 判分 = 格式与提取（标签可 fallback、围栏硬性）+ prelude/候选/断言拼程序进沙箱 + 受保护协议逐条判定 + 性能轮加赛；0.1 不是通过；拿 1.1 还要问三句——断言真的跑完了吗、断言本身够不够、限时内跑完大输入了吗。
 
-源码：`verl/utils/reward_score/coder1/__init__.py` 的 `validate_response_structure`（`:37`）、`extract_code_from_string`（`:57`）、`_compute_score`（`:63-127`）；`firejail_exec.py:38-49, :95-96`；`verl/workers/reward_manager/prime.py:64, :81-83`。
+上游源码：`verl/utils/reward_score/coder1/__init__.py` 的 `validate_response_structure`（`:37`）、`extract_code_from_string`（`:57`）、`_compute_score`（`:63-127`）；`firejail_exec.py:38-49, :95-96`；`verl/workers/reward_manager/prime.py:64, :81-83`。本仓现版：`coder1_plus/__init__.py`（门③三态与档位合成）、`coder1_plus/protocol.py`（受保护协议）、`coder1_plus/sandbox.py`（状态分类与后端）、`coder1_plus/perf.py`（性能轮）、`reward_manager/prime_plus.py`（重试与整组作废）。
 
 <a id="station-5"></a>
 
