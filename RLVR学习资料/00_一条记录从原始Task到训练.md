@@ -190,14 +190,14 @@ class Solution:
 
 课程有 6 个固定候选（`run_demo.py` 演示钉 legacy 口径与推演基线一致，映射到现版档位如下；课程的 GT 在 3 条 seed 之外补了 5 条诊断断言）：
 
-| 候选 | 做了什么 | reward | 判分日志里的证据 |
-|---|---|---:|---|
-| `reference` | 正确的 Kadane 写法 | 1.1 | `Test Execution Passed!` |
-| `correct_prefix` | 正确的前缀和写法 | 1.1 | `Test Execution Passed!` |
-| `wrong_empty` | 允许空子数组，全负数组返回 0 | 0.1 | `AssertionError: diag-all-negative`（输入 `[-3,-2,-5]`，期望 -2） |
-| `wrong_sum` | 直接返回整个数组的和 | 0.1 | `AssertionError: seed-1`：应得 6，返回 1 |
-| `bad_format` | 只给代码块，没有 think/answer 标签 | -1.1 | `Bad format detected!` |
-| `early_exit` | 代码第二行 `sys.exit(0)` | **1.1** | 没有任何断言执行，但退出码是 0 |
+| 候选 | 做了什么 | legacy 实测 | 现版档位 | 判分日志里的证据 |
+|---|---|---:|---:|---|
+| `reference` | 正确的 Kadane 写法 | 1.1 | 1.1 | `Test Execution Passed!` |
+| `correct_prefix` | 正确的前缀和写法 | 1.1 | 1.1 | `Test Execution Passed!` |
+| `wrong_empty` | 允许空子数组，全负数组返回 0 | 0.1 | 0.1 | `AssertionError: diag-all-negative`（输入 `[-3,-2,-5]`，期望 -2） |
+| `wrong_sum` | 直接返回整个数组的和 | 0.1 | 0.1 | `AssertionError: seed-1`：应得 6，返回 1 |
+| `bad_format` | 只给代码块（内容是**完全正确的参考解**），没有标签 | -1.1 | **0.9** | legacy：`Bad format detected!`；现版 fallback 抽出代码照样执行——对+无标签，补强项 9 的招牌案例 |
+| `early_exit` | 代码第二行 `sys.exit(0)` | **1.1** | **0.1** | legacy：没有任何断言执行但退出码 0；现版受保护协议下结果缺失判失败——补强项 4 的招牌案例 |
 
 两个值得口述的坑：
 
