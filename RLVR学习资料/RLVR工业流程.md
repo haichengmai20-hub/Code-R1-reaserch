@@ -807,7 +807,7 @@ functional 分支是整体通过/失败，没有逐断言 partial reward；STDIO
 
 如果生成结果被截断，但代码已经完整且符合预先规定的提交格式，可以按固定规则继续验证。不能根据最终测试结果临时调整截断处理规则。
 
-对于 INFRA_ERROR，应配置 `max_retries`。达到上限仍然失败的样本不进入正常 Reward 训练；如果错误率超过预设阈值，则暂停相关 Worker 或任务队列并排查。源码补强版的奖励管理器 `prime_plus` 按这个思路实现：判题故障先重试，仍失败的整组作废，并输出故障统计，见[反向补充源码](examples/source-supplements/README.md)。
+对于 INFRA_ERROR，应配置 `max_retries`。达到上限仍然失败的样本不进入正常 Reward 训练；如果错误率超过预设阈值，则暂停相关 Worker 或任务队列并排查。源码现版的奖励管理器 `prime_plus` 按这个思路实现：判题故障先重试，仍失败的单条掩码（故障样本 advantage 恰为 0，全故障组作废，D15），并输出故障统计，见[反向补充源码](examples/source-supplements/README.md)。
 
 <a id="failure-attribution"></a>
 
