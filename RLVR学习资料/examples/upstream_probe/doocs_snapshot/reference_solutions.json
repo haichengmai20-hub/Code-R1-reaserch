@@ -1,0 +1,102 @@
+[
+  {
+    "slug": "maximum-subarray",
+    "qid": 53,
+    "doocs_dir": "solution/0000-0099/0053.Maximum Subarray",
+    "fetch": "cached",
+    "repo_completion": {
+      "code_head": "class Solution:",
+      "status": "ok",
+      "duration": 1.802
+    },
+    "methods": [
+      {
+        "method": "方法一：动态规划",
+        "status": "ok",
+        "duration": 1.129,
+        "similarity_to_repo_completion": 0.992,
+        "stderr_tail": "",
+        "code": "class Solution:\n    def maxSubArray(self, nums: list[int]) -> int:\n        ans = f = nums[0]\n        for x in nums[1:]:\n            f = max(f, 0) + x\n            ans = max(ans, f)\n        return ans"
+      },
+      {
+        "method": "方法二：分治",
+        "status": "ok",
+        "duration": 2.16,
+        "similarity_to_repo_completion": 0.293,
+        "stderr_tail": "",
+        "code": "class Solution:\n    def maxSubArray(self, nums: list[int]) -> int:\n        def crossMaxSub(nums, left, mid, right):\n            lsum = rsum = 0\n            lmx = rmx = -inf\n            for i in range(mid, left - 1, -1):\n                lsum += nums[i]\n                lmx = max(lmx, lsum)\n            for i in range(mid + 1, right + 1):\n                rsum += nums[i]\n                rmx = max(rmx, rsum)\n            return lmx + rmx\n\n        def maxSub(nums, left, right):\n            if left == right:\n                return nums[left]\n            mid = (left + right) >> 1\n            lsum = maxSub(nums, left, mid)\n            rsum = maxSub(nums, mid + 1, right)\n            csum = crossMaxSub(nums, left, mid, right)\n            return max(lsum, rsum, csum)\n\n        left, right = 0, len(nums) - 1\n        return maxSub(nums, left, right)"
+      }
+    ]
+  },
+  {
+    "slug": "two-sum",
+    "qid": 1,
+    "doocs_dir": "solution/0000-0099/0001.Two Sum",
+    "fetch": "cached",
+    "repo_completion": {
+      "code_head": "class Solution:",
+      "status": "ok",
+      "duration": 3.384
+    },
+    "methods": [
+      {
+        "method": "方法一：哈希表",
+        "status": "ok",
+        "duration": 1.437,
+        "similarity_to_repo_completion": 0.632,
+        "stderr_tail": "",
+        "code": "class Solution:\n    def twoSum(self, nums: list[int], target: int) -> list[int]:\n        d = {}\n        for i, x in enumerate(nums):\n            if (y := target - x) in d:\n                return [d[y], i]\n            d[x] = i"
+      }
+    ]
+  },
+  {
+    "slug": "add-two-numbers",
+    "qid": 2,
+    "doocs_dir": "solution/0000-0099/0002.Add Two Numbers",
+    "fetch": "cached",
+    "repo_completion": {
+      "code_head": "# Definition for singly-linked list.",
+      "status": "ok",
+      "duration": 1.978
+    },
+    "methods": [
+      {
+        "method": "方法一：模拟",
+        "status": "ok",
+        "duration": 1.185,
+        "similarity_to_repo_completion": 0.999,
+        "stderr_tail": "",
+        "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def addTwoNumbers(\n        self, l1: Optional[ListNode], l2: Optional[ListNode]\n    ) -> Optional[ListNode]:\n        dummy = ListNode()\n        carry, curr = 0, dummy\n        while l1 or l2 or carry:\n            s = (l1.val if l1 else 0) + (l2.val if l2 else 0) + carry\n            carry, val = divmod(s, 10)\n            curr.next = ListNode(val)\n            curr = curr.next\n            l1 = l1.next if l1 else None\n            l2 = l2.next if l2 else None\n        return dummy.next"
+      }
+    ]
+  },
+  {
+    "slug": "same-tree",
+    "qid": 100,
+    "doocs_dir": "solution/0100-0199/0100.Same Tree",
+    "fetch": "cached",
+    "repo_completion": {
+      "code_head": "# Definition for a binary tree node.",
+      "status": "ok",
+      "duration": 1.23
+    },
+    "methods": [
+      {
+        "method": "方法一：DFS",
+        "status": "ok",
+        "duration": 1.261,
+        "similarity_to_repo_completion": 0.999,
+        "stderr_tail": "",
+        "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def isSameTree(self, p: Optional[TreeNode], q: Optional[TreeNode]) -> bool:\n        if p == q:\n            return True\n        if p is None or q is None or p.val != q.val:\n            return False\n        return self.isSameTree(p.left, q.left) and self.isSameTree(p.right, q.right)"
+      },
+      {
+        "method": "方法二：BFS",
+        "status": "ok",
+        "duration": 1.962,
+        "similarity_to_repo_completion": 0.521,
+        "stderr_tail": "",
+        "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def isSameTree(self, p: TreeNode, q: TreeNode) -> bool:\n        if p == q:\n            return True\n        if p is None or q is None:\n            return False\n        q1, q2 = deque([p]), deque([q])\n        while q1 and q2:\n            a, b = q1.popleft(), q2.popleft()\n            if a.val != b.val:\n                return False\n            la, ra = a.left, a.right\n            lb, rb = b.left, b.right\n            if (la and not lb) or (lb and not la):\n                return False\n            if (ra and not rb) or (rb and not ra):\n                return False\n            if la:\n                q1.append(la)\n                q2.append(lb)\n            if ra:\n                q1.append(ra)\n                q2.append(rb)\n        return True"
+      }
+    ]
+  }
+]

@@ -259,7 +259,10 @@ def main(argv=None):
     parser.add_argument("--parquet", action="store_true", help="also write train/test parquet (needs pandas and pyarrow)")
     parser.add_argument("--augment_cases", default=None,
                         help="JSON file {task_id: [case records]} produced by coder1_plus_tests; accepted cases are appended")
-    parser.add_argument("--drop_task_ids", default=None, help="JSON list of task_ids to remove from the train split")
+    parser.add_argument("--drop_task_ids", default=None, nargs="+",
+                        help="one or more JSON files with task_id lists to remove from the train split; "
+                             "D12/D14 quality gates produce one file each and are merged "
+                             "(drop = data untrusted; quarantine-for-later should use --keep_task_ids batches)")
     parser.add_argument("--keep_task_ids", default=None, help="JSON list; if given, keep only these task_ids in train")
     parser.add_argument("--merge_taco_from", default=None,
                         help="directory holding the original coder1.py train/test parquet; its TACO rows are merged as-is")
@@ -283,7 +286,9 @@ def main(argv=None):
                         perf_index[entry["task_id"]] = entry["perf"]
     train_rows, test_rows = build_leetcode_rows(augment, perf_index, args.append_constraints)
     if args.drop_task_ids:
-        drop = set(json.loads(Path(args.drop_task_ids).read_text(encoding="utf-8")))
+        drop = set()
+        for drop_path in args.drop_task_ids:
+            drop |= set(json.loads(Path(drop_path).read_text(encoding="utf-8")))
         train_rows = [row for row in train_rows if row["extra_info"]["task_id"] not in drop]
     if args.keep_task_ids:
         keep = set(json.loads(Path(args.keep_task_ids).read_text(encoding="utf-8")))
