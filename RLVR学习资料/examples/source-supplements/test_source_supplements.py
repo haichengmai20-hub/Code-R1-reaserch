@@ -262,11 +262,37 @@ class TestSandbox(unittest.TestCase):
 
 class TestInfraPolicy(unittest.TestCase):
 
-    def test_group_is_neutralized_instead_of_zero_filled(self):
+    def test_legacy_zero_rewards_wrong_answers(self):
         uids, statuses = ["q"] * 4, ["scored"] * 3 + ["infra_error"]
         legacy, _ = POLICY.resolve_group_failures([0.1, 0.1, 0.1, None], statuses, uids, policy="legacy_zero")
-        neutral, stats = POLICY.resolve_group_failures([0.1, 0.1, 0.1, None], statuses, uids)
         self.assertEqual([round(a, 2) for a in POLICY.grpo_advantages(legacy, uids)], [0.5, 0.5, 0.5, -1.5])
+
+    def test_default_masks_sample_with_exactly_zero_advantage(self):
+        # D15 单条掩码（默认）：故障样本分数=组内有效均值 → advantage 恰为 0；有效样本保方向
+        uids, statuses = ["q"] * 4, ["scored"] * 3 + ["infra_error"]
+        final, stats = POLICY.resolve_group_failures([1.1, 0.1, 0.1, None], statuses, uids)
+        adv = POLICY.grpo_advantages(final, uids)
+        self.assertEqual(round(final[3], 6), round((1.1 + 0.1 + 0.1) / 3, 6))   # 注入有效均值
+        self.assertEqual(adv[3], 0.0)                                            # 掩码样本零梯度
+        self.assertEqual([a > 0 for a in adv[:1]] + [a < 0 for a in adv[1:3]], [True, True, True])
+        self.assertEqual((stats["masked_samples"], stats["voided_groups"]), (1, 0))
+
+    def test_mask_on_homogeneous_group_yields_no_signal(self):
+        # 全错组 + 1 故障：有效样本同分（本就无信号），掩码后全组 advantage 数值上为零
+        uids, statuses = ["q"] * 4, ["scored"] * 3 + ["infra_error"]
+        final, _ = POLICY.resolve_group_failures([0.1, 0.1, 0.1, None], statuses, uids)
+        self.assertTrue(all(abs(a) < 1e-9 for a in POLICY.grpo_advantages(final, uids)))
+
+    def test_all_failed_group_falls_back_to_void(self):
+        uids, statuses = ["q"] * 4, ["infra_error"] * 4
+        final, stats = POLICY.resolve_group_failures([None] * 4, statuses, uids)
+        self.assertEqual(final, [0.0] * 4)
+        self.assertEqual((stats["voided_groups"], stats["masked_samples"]), (1, 0))
+
+    def test_neutralize_group_still_selectable(self):
+        uids, statuses = ["q"] * 4, ["scored"] * 3 + ["infra_error"]
+        neutral, stats = POLICY.resolve_group_failures([0.1, 0.1, 0.1, None], statuses, uids,
+                                                       policy="neutralize_group")
         self.assertEqual(POLICY.grpo_advantages(neutral, uids), [0.0] * 4)
         self.assertEqual(stats["neutralized_groups"], 1)
 
@@ -298,6 +324,59 @@ class TestSelection(unittest.TestCase):
                                                        "mixed": {"n": 8, "c": 3}, "few": {"n": 2, "c": 1}})
         self.assertEqual(keep, ["mixed"])
         self.assertEqual(set(dropped), {"all", "none", "few"})
+
+
+REFERENCE = _load_path(env.REPO / "examples/data_preprocess/coder1_plus_reference.py",
+                       "coder1_plus_reference")  # 补强项 11（D12：参考解不可得 → 过滤）
+
+DOOCS_FIXTURE = """# 题目
+
+### 方法一：动态规划
+
+<!-- tabs:start -->
+
+#### Python3
+
+```python
+class Solution:
+    def maxSubArray(self, nums: list[int]) -> int:
+        ans = f = nums[0]
+        return ans
+```
+
+#### Java
+
+```java
+class Solution {}
+```
+
+### 方法二：分治
+
+#### Java
+
+```java
+class Solution {}
+```
+"""
+
+
+class ReferenceCoverage(unittest.TestCase):
+
+    def test_slug_to_title_heuristic_and_specials(self):
+        self.assertEqual(REFERENCE.slug_to_title("maximum-subarray"), "Maximum Subarray")
+        self.assertEqual(REFERENCE.slug_to_title("powx-n"), "Pow(x, n)")  # 启发式覆盖不到的走登记表
+
+    def test_doocs_dir_ranges(self):
+        self.assertEqual(REFERENCE.doocs_dir(53, "Maximum Subarray"), "solution/0000-0099/0053.Maximum Subarray")
+        self.assertEqual(REFERENCE.doocs_dir(1430, "X").startswith("solution/1400-1499/1430."), True)
+
+    def test_extract_keeps_only_python3_blocks_with_solution_class(self):
+        solutions = REFERENCE.extract_python_solutions(DOOCS_FIXTURE)
+        self.assertEqual([s["method"] for s in solutions], ["方法一：动态规划"])  # 方法二只有 Java，不收
+        self.assertIn("class Solution", solutions[0]["code"])
+
+    def test_no_python_readme_means_no_reference(self):
+        self.assertEqual(REFERENCE.extract_python_solutions("### 方法一\n\n#### Java\n\n```java\nx\n```\n"), [])
 
 
 if __name__ == "__main__":

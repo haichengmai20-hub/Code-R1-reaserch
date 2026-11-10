@@ -20,14 +20,16 @@
    四档：对+标签 1.1、对+无标签 0.9、错+标签 0.1、错/无代码+无标签 −0.1。任何含正确解的回答严格高于
    任何不含的。CODER1_PLUS_REWARD=legacy 可复现原版口径（−1.1/0.1/1.1）。没有 ``prelude`` 的 GT 仍委托
    原版判分，分值不变。
-10. 性能轮（2026-11-07，见 perf.py）
+10. 性能轮（2026-11-07，见 perf.py；归因 2026-11-09 随测试扩容方案修正）
     原版 reward 只测输出，O(n^2) 与 O(n) 的正确回答同分，RL 学不会「写快」。补强版给带
     ``extra_info.perf`` 标定值的数据行加一个性能轮：正确性轮通过后，用记录的种子确定性重建大输入
     （规模来自 Constraints 解析，上标丢失按 10 的幂识别），timeout 用「参考解实测 × 3」的每题标定值。
-    超时或大输入输出不符记性能瑕疵，扣 0.2 与「对但无标签」并列 0.9 档（对+快+标签 1.1、对+一项瑕疵
-    0.9、对+两项 0.7）。标定是一次性离线产物（数据侧 ``coder1_plus_perf.py``），训练时零标定开销、
-    同题各 step 判分标准不漂移；legacy 口径整体跳过。设计依据：CodeContests 每题带 time_limit 数据
-    字段；Codeforces Polygon 用预期解实测 × 系数标定 TL、用故意慢的解做负对照验证。
+    归因：单纯超时记性能瑕疵，扣 0.2 与「对但无标签」并列 0.9 档（对+快+标签 1.1、对+一项瑕疵
+    0.9、对+两项 0.7）；大输入输出不符或出错记正确性失败（0.1 档）——大输入是题意合法输入，
+    答错就是错解，留在 0.9 会让崩溃的错答与慢而对打平。标定是一次性离线产物（数据侧
+    ``coder1_plus_perf.py``），训练时零标定开销、同题各 step 判分标准不漂移；legacy 口径整体跳过。
+    设计依据：CodeContests 每题带 time_limit 数据字段；Codeforces Polygon 用预期解实测 × 系数
+    标定 TL、用故意慢的解做负对照验证。
 
 没有 ``prelude`` 字段的 GT，例如 TACO 的函数题和标准输入输出题、KodCode 的 pytest 题，
 原样交给原版 ``coder1._compute_score``，行为不变。断言写法超出协议支持范围时，退回第 1 项的拼接契约。
@@ -127,10 +129,12 @@ def compute_score_detailed(solution_str, ground_truth, extra_info=None, format_r
     info["log"] = "\n".join(lines)
     info["status"] = "passed" if passed else "failed"
 
-    # 第 10 项：性能轮。正确性通过且数据行 extra_info.perf 带标定值时加跑一轮大输入；
-    # 超时/大输入不符记为性能瑕疵，扣 2×format_reward，与「对但无标签」并列 0.9 档
-    # （瑕疵并罚制：对+快+标签 1.1、对+一项瑕疵 0.9、对+两项 0.7；任何对答仍严格高于任何错答）。
-    # legacy 口径整体跳过（推演生成器钉 legacy，行为与 git 基线一致）。
+    # 第 10 项：性能轮。正确性通过且数据行 extra_info.perf 带标定值时加跑一轮大输入。
+    # 归因（2026-11-09 随测试扩容方案修正）：单纯超时（slow）是性能瑕疵，扣 2×format_reward，
+    # 与「对但无标签」并列 0.9 档；大输入上输出不符或出错（mismatch/error）是正确性失败——
+    # 大输入是题意合法输入，答错就是错解，回 0.1 档（与正确性轮失败同档；LeetCode 的 RE 同判
+    # 不通过）。若把 mismatch 留在 0.9，崩溃的错答会和慢而对 0.9 打平，破坏「任何对答严格
+    # 高于任何错答」。legacy 口径整体跳过（推演生成器钉 legacy，行为与 git 基线一致）。
     perf_field = extra_info.get("perf") if isinstance(extra_info, dict) else None
     if (passed and isinstance(perf_field, dict) and "time_limit_ms" in perf_field
             and os.environ.get("CODER1_PLUS_REWARD", "aligned") != "legacy"):
@@ -138,7 +142,10 @@ def compute_score_detailed(solution_str, ground_truth, extra_info=None, format_r
         info["perf"] = perf_out
         if perf_out["status"] == "infra":
             return None, {**info, "status": "infra_error", "log": info["log"] + "\nperf infra_error"}
-        if perf_out["status"] in ("slow", "mismatch", "error"):
+        if perf_out["status"] in ("mismatch", "error"):
+            info["status"] = "failed_perf_mismatch"  # 合法大输入上答错/崩溃 = 正确性失败
+            return fmt, info
+        if perf_out["status"] == "slow":
             info["status"] = "passed_perf_gap"
             return (answer_reward + fmt - 2 * format_reward), info
 

@@ -13,7 +13,7 @@ uv 管理的 Python 不允许直接 pip 安装，先建 venv（2026-10-15 在 ma
 三种组合：
 1. 原版管理器 + 原版 GT：没有 firejail 时，判题出错被记成 0.0（02 讲的缺口 3）。
 2. 补强版管理器 + 补强版 GT：受保护协议加本机沙箱，得到 1.1、0.1、0.1、0.9（第四条缺标签但代码对，补强项 9）。
-3. 补强版管理器 + 原版 GT：没有 firejail 时，判题故障先重试，仍失败就整组作废。
+3. 补强版管理器 + 原版 GT：没有 firejail 时，判题故障先重试，仍失败按默认单条掩码处置（组内全故障退回整组作废，D15）。
 """
 import contextlib
 import io
@@ -108,8 +108,11 @@ def main():
     if has_firejail:
         checks["plus_manager_on_original_gt"] = scores == [1.1, 0.1, 1.1, -1.1]
     else:
-        checks["plus_manager_on_original_gt"] = (scores == [0.0, 0.0, 0.0, 0.0]
-                                                 and manager.last_report["neutralized_groups"] == 1)
+        # 无 firejail：带标签的 3 条走执行→判题故障；untidy 无标签被原版格式门记 −1.1（真分数，不执行）。
+        # 单条掩码（D15）：故障 3 条注入有效均值 −1.1 → 全组同分 → advantage 全 0；不整组作废。
+        checks["plus_manager_on_original_gt"] = (scores == [-1.1, -1.1, -1.1, -1.1]
+                                                 and manager.last_report["masked_samples"] == 3
+                                                 and manager.last_report["voided_groups"] == 0)
 
     result["checks"] = checks
     print(json.dumps(result, ensure_ascii=False, indent=2))

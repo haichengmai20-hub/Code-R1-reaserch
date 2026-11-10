@@ -11,8 +11,10 @@
 3. 负对照（Polygon 慢解标签的对应物）：O(n^2) 暴力小输入全对、大输入超时 → 0.9
    （对但慢），info.perf.status == "slow"。
 4. 双瑕疵：O(n^2) 暴力 + 无严格标签（fallback 提取）→ 0.7（对+慢+无标签）。
-5. 错答不触发性能轮：wrong_sum → 0.1，info 无 perf 键（性能轮只对正确性通过者加跑）。
-6. legacy 口径：CODER1_PLUS_REWARD=legacy 下性能轮整体跳过，暴力有标签 → 1.1
+5. 大输入答错归正确性失败（2026-11-09 归因修正）：小输入全对、大输入返回错值的构造解
+   → 0.1（不是 0.9），info.perf.status == "mismatch"、整体状态 failed_perf_mismatch。
+6. 错答不触发性能轮：wrong_sum → 0.1，info 无 perf 键（性能轮只对正确性通过者加跑）。
+7. legacy 口径：CODER1_PLUS_REWARD=legacy 下性能轮整体跳过，暴力有标签 → 1.1
    （原版口径不变，推演生成器钉 legacy 的行为不受影响）。
 """
 import importlib.util
@@ -40,6 +42,18 @@ BRUTE_FORCE = """class Solution:
         return best
 """
 WRONG_SUM = "class Solution:\n    def maxSubArray(self, nums):\n        return sum(nums)\n"
+# 构造的「规模相关错误」：小输入全对，大输入（len ≥ 1000）返回 0——测的是归因机制：
+# 合法大输入上答错必须是正确性失败（0.1），不能算性能瑕疵（0.9）
+SCALE_WRONG = """class Solution:
+    def maxSubArray(self, nums):
+        if len(nums) >= 1000:
+            return 0
+        ans = f = nums[0]
+        for x in nums[1:]:
+            f = max(f, 0) + x
+            ans = max(ans, f)
+        return ans
+"""
 
 
 def load_task(task_id):
@@ -124,12 +138,18 @@ def main():
     results.append(check("score", value, 0.7))
     results.append(check("extraction == fallback", info.get("extraction"), "fallback"))
 
-    print("\n== 5. 错答不触发性能轮：wrong_sum -> 0.1 ==")
+    print("\n== 5. 大输入答错归正确性失败（归因修正）：构造解 -> 0.1 ==")
+    value, info = score(env.wrap_response(SCALE_WRONG))
+    results.append(check("score", value, 0.1))
+    results.append(check("perf.status == mismatch", info.get("perf", {}).get("status"), "mismatch"))
+    results.append(check("整体状态 = failed_perf_mismatch", info.get("status"), "failed_perf_mismatch"))
+
+    print("\n== 6. 错答不触发性能轮：wrong_sum -> 0.1 ==")
     value, info = score(env.wrap_response(WRONG_SUM))
     results.append(check("score", value, 0.1))
     results.append(check("无 perf 键（性能轮未触发）", "perf" in info, False))
 
-    print("\n== 6. legacy 口径：暴力有标签 -> 1.1，性能轮跳过 ==")
+    print("\n== 7. legacy 口径：暴力有标签 -> 1.1，性能轮跳过 ==")
     value, info = score(env.wrap_response(BRUTE_FORCE), legacy=True)
     results.append(check("score（原版口径不变）", value, 1.1))
     results.append(check("无 perf 键（legacy 跳过）", "perf" in info, False))

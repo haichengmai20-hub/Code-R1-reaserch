@@ -13,10 +13,11 @@
 | 3 | 测试补充与逐条审核：从只支持 LeetCode 53 推广到一般函数题，逐条接受、隔离、升版本 | [01 作业 1.2](../../01_数据理解与GT构建.md#assignment-1-2)、[主框架 A3](../../RLVR工业流程.md#tests) | `coder1_plus_tests.py`、`coder1_plus_oracles.py`、`coder1_plus.py --augment_cases` | 2026-10-14 完成，7 道示范题已验证 |
 | 4 | 受保护的判题协议：逐条执行、结构化结果、提前退出判失败；允许任意顺序的题改用顺序无关的比较 | [02](../../02_Verifier与任务池验收.md)、[主框架第三章](../../RLVR工业流程.md#execution-boundary) | `verl/utils/reward_score/coder1_plus/protocol.py` | 2026-10-14 完成，CPU 已验证 |
 | 5 | 沙箱：执行结果分成编译错误、运行错误、超时、基础设施错误等状态；记录耗时；超时后确保子进程被清理；本机开发另配一个用 macOS sandbox-exec 禁网、限写的隔离后端，Linux 训练仍用 firejail。范围已经用户确认 | [主框架第三章](../../RLVR工业流程.md#execution-boundary)、[第五章的异常处理](../../RLVR工业流程.md#reward-mapping) | `verl/utils/reward_score/coder1_plus/sandbox.py` | 2026-10-14 完成，macOS 已验证，firejail 分支待 Linux 实跑 |
-| 6 | 基础设施异常不再记 0 分，改成结构化状态加有限次重试，必要时整组作废 | [03 作业 3.2](../../03_Rollout与GRPO机制.md#assignment-3-2) | `verl/workers/reward_manager/infra_policy.py`、`prime_plus.py`、训练入口的 `prime_plus` 分支 | 2026-10-14 完成；2026-10-15 奖励管理器在 macOS CPU 上用 torch 整体跑通；firejail 分支与接入真实训练待 Linux 实跑 |
+| 6 | 基础设施异常不再记 0 分，改成结构化状态加有限次重试，默认单条掩码（D15），全故障组作废 | [03 作业 3.2](../../03_Rollout与GRPO机制.md#assignment-3-2) | `verl/workers/reward_manager/infra_policy.py`、`prime_plus.py`、训练入口的 `prime_plus` 分支 | 2026-10-14 完成；2026-10-15 奖励管理器在 macOS CPU 上用 torch 整体跑通；firejail 分支与接入真实训练待 Linux 实跑 |
 | 7 | 和评测集去重；按当前模型的通过率过滤难度 | [01 全景](../../01_数据理解与GT构建.md#pipeline-1)、主框架 A8 | `examples/data_preprocess/coder1_plus_selection.py`、`coder1_plus.py --drop_task_ids/--keep_task_ids` | 2026-10-14 完成：去重用 v1 test 演示；难度筛选的通过率要靠 GPU 真实采样 |
 | 9 | 奖励分值的字典序修正：正确性 1.0/0、格式 ±0.1，无标签时退回最后代码块照样执行；任何对答严格高于任何错答 | [02 的 reward 三档](../../02_Verifier与任务池验收.md#reward-levels-2) | `verl/utils/reward_score/coder1_plus/__init__.py`（`CODER1_PLUS_REWARD=aligned|legacy`） | 2026-11-06 完成，CPU 已验证 |
 | 10 | 性能轮：每题标定 `time_limit_ms`（参考解实测 ×3），正确性通过后加跑大输入，超时/不符降 0.9 档（瑕疵并罚） | [02 的执行边界](../../02_Verifier与任务池验收.md#execution-gaps-2)、2026-11-07 讨论 | `verl/utils/reward_score/coder1_plus/perf.py`、`examples/data_preprocess/coder1_plus_perf.py` | 2026-11-07 完成，Windows local 后端 15/15 + 既有套件 23/23 |
+| 11 | 社区参考解获取（doocs）与入池质量门：`coverage` 产出「参考解不可得」清单（D12），`verify` 产出「参考解跑不通样例」清单（D14 门②），清单给 `--drop_task_ids`（支持多文件合并） | [01 上游社区参考解实测](../../01_数据理解与GT构建.md#upstream-data)、[设计定案表 D12/D14](../../设计定案表.md) | `examples/data_preprocess/coder1_plus_reference.py`、学习侧探针 `RLVR学习资料/examples/upstream_probe/reference_probe.py` | 2026-11-09 完成：小样 4 留 2 丢与实测一致、verify 4/4 trusted、多文件 drop 冒烟 1888 行、单元测试 27/27 |
 
 <a id="supplement-1"></a>
 
@@ -157,14 +158,15 @@
 
 **问题。** 原版奖励管理器遇到评分超时或异常，把这一条直接记成 0.0，0.0 又进入同组的均值和标准差，三条错误回答会因此拿到正的 advantage。
 
-**做法。** 每条样本的评分带状态：正常得分，或判题故障。判题故障先有限次重试；仍失败的，按 uid 把整组分数设成同一个值，组内 advantage 全为 0，这组不提供 outcome 信号，KL 与熵项照常。同时输出故障条数、作废的组数和样本数，故障率高时应停下排查。训练配置写 `reward_model.reward_manager=prime_plus` 启用。
+**做法。** 每条样本的评分带状态：正常得分，或判题故障。判题故障先有限次重试；仍失败的**默认单条掩码（D15，2026-11-09）**：故障样本的分数设为**组内有效样本的均值**——GRPO 组内标准化后它的 advantage **恰为 0**（零梯度、不替未知质量做主张），其余已判分的 rollout 照常提供相对信号，不为一条故障浪费整组采样；**组内全部故障退回整组作废**（同分 → advantage 全 0）。占位值调不出更好的：0.0 奖励错答（BC-10）、0.2 让占位样本拿全组最强正信号 +1.5——任何具体数值都在替未知质量伪造主张，掩码才是「不知道」的正确表达。代价：组内尺度被均匀放大 sqrt((n−1)/(n−2))（方向不变）；故障样本 token 仍占 loss 分母（与整组作废同性质）。`CODER1_PLUS_INFRA_POLICY` 可切 `mask_sample|neutralize_group|legacy_zero`（默认 mask_sample）；同时输出故障条数、掩码条数、作废组数，故障率高时应停下排查。训练配置写 `reward_model.reward_manager=prime_plus` 启用。
 
 **结果。** 同组一条判题故障的对照：
 
-| 处理方式 | 这一组的 advantage |
-|---|---|
-| 原版，故障记 0.0 | +0.5、+0.5、+0.5、-1.5 |
-| 补强版，整组作废 | 0、0、0、0 |
+| 处理方式 | 组 0.1、0.1、0.1、故障 | 组 1.1、0.1、0.1、故障 |
+|---|---|---|
+| 原版，故障记 0.0 | +0.5、+0.5、+0.5、−1.5（错答被奖励） | +1.49、−0.43、−0.43、−0.63 |
+| 旧补强，整组作废 | 0、0、0、0 | 0、0、0、0 |
+| 现版单条掩码（默认） | 全组同分 → ≈0（本例有效样本同分，与作废等价） | +1.41、−0.71、−0.71、**恰 0**（故障零信号，其余照常） |
 
 另一组不受影响，仍是 ±0.866。重试逻辑也测过：前一次出错、第二次成功的，返回第二次的分数；持续出错的，按设定次数重试后标为判题故障。
 
@@ -174,15 +176,15 @@
 |---|---:|---:|---:|---:|---|
 | 原版管理器，原版 GT，本机没有 firejail | 0.0 | 0.0 | 0.0 | -1.1 | 3 条执行错误被吞掉，记成 0.0 |
 | 补强版管理器，补强版 GT，sandbox-exec | 1.1 | 0.1 | 0.1 | -1.1 | 判题故障 0 条 |
-| 补强版管理器，原版 GT，本机没有 firejail | 0.0 | 0.0 | 0.0 | 0.0 | 3 条判题故障，重试后整组作废 |
+| 补强版管理器，原版 GT，本机没有 firejail | -1.1 | -1.1 | -1.1 | -1.1 | 缺格式先记真分 −1.1；3 条判题故障被掩码注入 −1.1，全组同分、advantage 全 0（2026-11-09 按 D15 复验） |
 
 第一行就是缺口在真实张量上的样子：机器上没有 firejail，原版不报错，只是把这几条记成 0.0 送进组内统计。
 
-**边界。** 仍待 Linux 的是 firejail 分支，以及接入真实训练循环：真实 tokenizer、Ray worker、`reward_model.reward_manager=prime_plus` 的启动路径。整组作废会让这组题这一步没有 outcome 信号，故障多时等于少训了这些题。
+**边界。** 仍待 Linux 的是 firejail 分支，以及接入真实训练循环：真实 tokenizer、Ray worker、`reward_model.reward_manager=prime_plus` 的启动路径。单条掩码下故障样本零信号、其余照常，但故障样本的 token 仍占 loss 分母；故障率高说明环境有问题，先停下排查，别靠掩码硬扛。
 
 ## 按学习进度的扫描记录
 
-**02（2026-10-15）。** 02 讲到的判分机制，原版缺的部分都已由补强项 4 到 6 覆盖：受保护判题协议、结构化执行层、判题故障整组作废。另有两项暂不补：
+**02（2026-10-15）。** 02 讲到的判分机制，原版缺的部分都已由补强项 4 到 6 覆盖：受保护判题协议、结构化执行层、判题故障单条掩码。另有两项暂不补：
 
 - 多解题的专用判定器。补强项 4 只忽略外层顺序；分组或内层也可任意排列的题要逐题写判定器，04 的两数之和迁移练习覆盖这个思路，按题补比做通用框架合适。
 - 标准输入输出题接入受保护协议。原版的标准输入输出分支本来就在判分方比较 stdout，提前退出会因为没有输出而判失败；补强版的数据只改 LeetCode 函数题，TACO 行原样交给原版判分。
@@ -210,9 +212,9 @@
 
 ## 补强项 8（候选，未实现）：标准输入输出题的受保护协议
 
-**缘起。** 05 第三环里学习者决定把 TACO 并进训练集，并「先把受保护协议扩到标准输入输出题，再开训」。原版对这类题的判法是整段 stdout 与期望比对、看退出码，没有前缀、没有逐条报告，也分不开候选错误与判题故障，所以 prime_plus 的整组作废拿不到它的故障信号。
+**缘起。** 05 第三环里学习者决定把 TACO 并进训练集，并「先把受保护协议扩到标准输入输出题，再开训」。原版对这类题的判法是整段 stdout 与期望比对、看退出码，没有前缀、没有逐条报告，也分不开候选错误与判题故障，所以 prime_plus 的故障治理拿不到它的故障信号。
 
-**要补的。** 一个进程喂多条输入、逐条报告结果（通过 / 错误 / 超时 / 故障）、候选错误与判题故障分开记、接 prime_plus 的整组作废；提前退出沿用原版的「stdout 为空即失败」。CPU 可验证：固定候选（对、错、提前退出、超时）加一个人为的故障（沙箱起不来）。
+**要补的。** 一个进程喂多条输入、逐条报告结果（通过 / 错误 / 超时 / 故障）、候选错误与判题故障分开记、接 prime_plus 的故障治理（单条掩码）；提前退出沿用原版的「stdout 为空即失败」。CPU 可验证：固定候选（对、错、提前退出、超时）加一个人为的故障（沙箱起不来）。
 
 **状态。** 只登记，没有代码；实现与否等学习者决定。2026-10-19 学习者决定训练方案先去掉 TACO（本机没有数据），这一项暂不需要；TACO 并回来时再做。实现时与补强项 4、6 同一目录，原版判分文件不改。
 
@@ -263,24 +265,43 @@
 
 **改法。**
 - 数据侧 `coder1_plus_perf.py` 一次性离线标定：从 `question_title` 的 Constraints 解析规模上界（上标丢失按 10 的幂识别：字面 `105` 视作 10^5；覆盖 `n <= 10**5` 与 `5 * 104` 写法），把样例输入放大成大输入（封顶 100,000、下限 1,000），参考解实测墙钟（含进程启动，与沙箱计时同口径，取两次较慢者）×3 得 `time_limit_ms`（下限 500ms），连同确定性种子与期望输出写进 `extra_info.perf`。训练时零标定开销，同题各 step 判分标准不随负载漂移。
-- 判分侧 `perf.py` + `__init__.py`：正确性轮通过且带 `perf` 字段时加跑性能轮——用种子确定性重建大输入，`sandbox.run_python(timeout=time_limit_ms/1000)`；超时或大输入输出不符（规模相关瑕疵）记性能瑕疵。分值为瑕疵并罚制（接补强项 9 的字典序）：性能瑕疵 −0.2，与「对但无标签」并列——对+快+标签 1.1、对+一项瑕疵 0.9、对+两项 0.7，任何对答仍严格高于任何错答。`CODER1_PLUS_REWARD=legacy` 整体跳过（推演口径不变）；infra 故障抛 `InfraError` 走补强项 6 的整组作废。
+- 判分侧 `perf.py` + `__init__.py`：正确性轮通过且带 `perf` 字段时加跑性能轮——用种子确定性重建大输入，`sandbox.run_python(timeout=time_limit_ms/1000)`。**归因（2026-11-09 随测试扩容方案修正）**：单纯超时记性能瑕疵，分值为瑕疵并罚制（接补强项 9 的字典序）：性能瑕疵 −0.2，与「对但无标签」并列——对+快+标签 1.1、对+一项瑕疵 0.9、对+两项 0.7；**大输入输出不符或出错记正确性失败（0.1 档）**——大输入是题意合法输入，答错就是错解，留在 0.9 会让崩溃的错答与慢而对 0.9 打平，破坏「任何对答严格高于任何错答」。`CODER1_PLUS_REWARD=legacy` 整体跳过（推演口径不变）；infra 故障抛 `InfraError` 走补强项 6 的单条掩码。
 - 顺带：`sandbox.py` 补 Windows 兼容——显式选择 `local` 后端时可用（墙钟超时照常，资源限额降级为无；`auto` 在 Windows 仍 unavailable，「不静默降级」不变），供本机教学验证，生产走 Linux firejail。
 
-**验证（2026-11-07，Windows + Python 3.14.6 + local 后端）。** `verify_perf_round.py` 15/15：标定链（`105`→10^5、time_limit_ms=500、expected 非空）、正对照（Kadane 对+快 → 1.1，`perf.status=pass`）、负对照（O(n^2) 暴力小输入全对、大输入超时 → 0.9，`perf.status=slow`，Polygon 慢解标签的对应物）、双瑕疵（暴力+无标签 → 0.7）、错答不触发（wrong_sum → 0.1，无 perf 键）、legacy 跳过（暴力 → 1.1 原版口径）。既有套件 `test_source_supplements.py` 23/23（Windows local 后端下原先 5 个沙箱 error 全部转绿；3 个 skip 是必须真隔离后端的测试）。全量 1890 题标定与树/链表/stdio 题的扩展待做（第一版只支持恰一个 `List[int]` 参数的题）。
+**验证（2026-11-07，Windows + Python 3.14.6 + local 后端；2026-11-09 macOS 复验）。** `verify_perf_round.py` 18/18：标定链（`105`→10^5、time_limit_ms=500、expected 非空）、正对照（Kadane 对+快 → 1.1，`perf.status=pass`）、负对照（O(n^2) 暴力小输入全对、大输入超时 → 0.9，`perf.status=slow`，Polygon 慢解标签的对应物）、双瑕疵（暴力+无标签 → 0.7）、**大输入答错归正确性失败（2026-11-09 增：构造解小输入全对、大输入返回错值 → 0.1，`perf.status=mismatch`、整体状态 `failed_perf_mismatch`）**、错答不触发（wrong_sum → 0.1，无 perf 键）、legacy 跳过（暴力 → 1.1 原版口径）。既有套件 `test_source_supplements.py` 27/27。全量 1890 题标定与树/链表/stdio 题的扩展待做（第一版只支持恰一个 `List[int]` 参数的题）。
 
 **诚实边界。** 计时噪声无法完全消除（并发判分负载抖动），缓解靠 3× 系数、500ms 下限、两次实测取慢；「对但慢 0.9」的语义成立前提是 timeout 标定合理，标定脚本对解析失败/参考解跑不动的题记 `skip_reason` 跳过、不硬造值；真实训练里的组内 advantage 影响只有 Linux GPU 实跑才能验证。
+
+<a id="supplement-11"></a>
+
+## 补强项 11：社区参考解获取与 D12 过滤
+
+**问题。** 参考解不参与判分（`extra_info.reference` 判分器不读），但它是行为层验收的必需品：题面 ↔ 样例 ↔ 参考解的三角自洽少了参考解就无从做起，测试错了一半都没有工具能发现。LeetCode 官方题解在付费墙后，拿不到参考解的题留在池子里只能靠格式层把关。2026-11-09 实测把获取途径钉在社区题解库 doocs/leetcode：4 题 6 解全部通过行为层验收（原生拼法跑仓库 test），且 3/4 题「方法一」与冻结 completion 相似度 ≥0.99——上游参考解的出处即 doocs。
+
+**改法（定案 D12 + D14，见设计定案表）。** 过滤关的判据是四道质量门：①参考解可得（D12）、②参考解可信（D14）、③④覆盖度补强前基线与补强后达标（接[测试扩容方案](../../测试扩容方案_v1.md)，清单同走 drop/keep）。①②已实现，丢弃走 `--drop_task_ids`（数据不可信，物理排除）、隔离分批走 `--keep_task_ids`（题目没坏、测试没做完）。数据侧工具 `coder1_plus_reference.py` 三个子命令：
+- `coverage`（门①）：全池普查（doocs 目录分片 → 逐题 README → 有无 Python3 解），产出 `drop_reference_missing.json`（JSON list，给 `--drop_task_ids`）和 `coverage_report.json`（逐题原因 + Easy/Medium/Hard 保留/丢弃对照）。全请求限速 1s、成功才缓存、断点续跑；题号 ≥100000 的面试金典题标记 `lcci_out_of_doocs_range` 同样丢弃。
+- `verify`（门②，2026-11-09）：对 coverage 缓存的每题做行为层验收——原生拼法（前缀 + 解 + test + check 入口）在补强沙箱跑，any 语义（任一 doocs 方法通过即可信，并记录哪份通过供变异审计/扩容取用），产出 `drop_reference_untrusted.json` 与 `verify_report.json`。对照组（仓库冻结 completion）也失败时判 `env_suspect` 不自动丢——BC-24 铁律：参考解同分即环境实锤，先查环境。
+- `fetch`：取回指定题的参考解并做行为层验收；无 numpy/torch 环境经 `supplement_env` 的包桩加载沙箱。
+- `coder1_plus.py --drop_task_ids` 同日起支持**多个 JSON 文件合并**（`nargs="+"`）：门①②两份清单一起传。
+
+**验证（2026-11-09，macOS + Python 3.12 + sandbox-exec）。** coverage 小样与实测对齐：4 道已知有解题 + 2 道已知无 Python 解题，结果 4 留 2 丢、原因 `no_python_solution`，难度对照正确输出。verify 在 4 道缓存题上验证：4/4 trusted，全部方法与对照组 ok，`passing_methods` 正确记录（maximum-subarray 的方法一/方法二都过）。多文件 drop 冒烟：两份清单各含一题传给 `coder1_plus.py --drop_task_ids a.json b.json`，train 1888 行 = 1890−2。单元测试新增 4 条（标题启发式与登记表、目录分片、Python3 围栏提取只认含 `class Solution` 的块、无 Python 解得空清单），`test_source_supplements.py` 27/27。覆盖率的先期实测（2026-11-09）：1868 道算法题文件夹级 1868/1868、README 含 Python3 解抽样 32/40≈80%——全量普查跑一次 `coverage` 即得正式清单。网络健壮性（同日）：GitHub raw 对本机偶发「慢滴」连接（进程可卡在 SSL read 数分钟），`http_get` 加了单次尝试 20s 总墙钟预算 + `read1` 分块读，慢滴被截成 `fetch_error` 快速失败、不缓存、重跑可续。
+
+**诚实边界。** 「有 Python3 解」是过滤判据，不是正确性证明——每份拿回的参考解仍要走 `fetch` 的行为层验收才算数（验收又受样例测试弱的限制，升级靠多解互证，见专题索引专题三）。doocs 的 HTML 树页面解析和 raw 抓取都受网络与上游改版影响，失败题记 `fetch_error` 不缓存、重跑可续；覆盖率数字随 doocs 演化漂移，正式清单要和数据版本一起冻结。
 
 ## 怎样运行
 
 在仓库根目录的 bash 里执行，`$PY` 的设置见[资料首页](../../README.md#run-setup)：
 
 ```bash
-$PY -B RLVR学习资料/examples/source-supplements/test_source_supplements.py   # 22 个单元测试，约 2 秒
+$PY -B RLVR学习资料/examples/source-supplements/test_source_supplements.py   # 27 个单元测试，约 3 秒
 $PY -B RLVR学习资料/examples/source-supplements/verify_gt_contract.py       # 补强项 1：2090 题两种契约对照，约 20 秒
 $PY -B RLVR学习资料/examples/source-supplements/verify_test_quality.py      # 补强项 2、3：抽 200 题审计加 7 题闭环，约 1 分钟
 $PY -B RLVR学习资料/examples/source-supplements/verify_test_quality.py --all  # 全部 2090 题审计，约 7 分钟
 $PY -B RLVR学习资料/examples/source-supplements/verify_judge_and_selection.py   # 补强项 4 到 7：沙箱探针、攻击候选、故障策略、去污染，约 10 秒
 $PY -B examples/data_preprocess/coder1_plus.py --root_dir ./data            # 生成补强版 JSONL；加 --parquet 写训练用 parquet
+$PY -B examples/data_preprocess/coder1_plus_reference.py coverage --out_dir data/reference_coverage   # 补强项 11：门① D12 丢弃清单 + 难度对照（全量约 35 分钟，断点续跑；产物在 gitignore 的 data/ 下）
+$PY -B examples/data_preprocess/coder1_plus_reference.py verify --out_dir data/reference_coverage    # 补强项 11：门② D14 参考解行为层验收 → untrusted 清单（读 coverage 缓存，纯 CPU）
+$PY -B examples/data_preprocess/coder1_plus_reference.py fetch --problems maximum-subarray two-sum     # 补强项 11：取参考解 + 行为层验收
 $PY -B examples/data_preprocess/coder1_plus.py --root_dir ./data --augment_cases RLVR学习资料/examples/source-supplements/outputs/accepted_cases.json
 ```
 

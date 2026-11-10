@@ -1,7 +1,9 @@
 """补强项 6 的奖励管理器：PrimeRewardManager 的平行版本，原版 prime.py 不动。
 
 与原版相同：并发评分、把标量奖励放在最后一个有效回答 token 上。
-与原版不同：判题故障不再直接记 0.0，而是先重试，仍失败时按 uid 整组作废，策略见 infra_policy.py。
+与原版不同：判题故障不再直接记 0.0，而是先重试，仍失败时默认单条掩码（D15：故障样本分数=组内
+有效均值，advantage 恰为 0，不浪费其余已判分的 rollout；组内全故障退回整组作废），策略见
+infra_policy.py；CODER1_PLUS_INFRA_POLICY=mask_sample|neutralize_group|legacy_zero 可换。
 data_source 为 code_plus 时使用 coder1_plus 的结构化结果，能区分候选失败与判题故障；其他数据源沿用
 _default_compute_score，只有抛出的异常会被当作判题故障。
 在训练配置里写 reward_model.reward_manager=prime_plus 启用。
@@ -13,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeout
 from functools import partial
 from multiprocessing import cpu_count
+import os
 
 import torch
 
@@ -33,7 +36,8 @@ def _score_once(compute_score, data_source, solution_str, ground_truth, extra_in
 
 class PrimePlusRewardManager:
 
-    def __init__(self, tokenizer, num_examine, compute_score=None, max_retries=2, policy="neutralize_group",
+    def __init__(self, tokenizer, num_examine, compute_score=None, max_retries=2,
+                 policy=os.environ.get("CODER1_PLUS_INFRA_POLICY", "mask_sample"),
                  judge_timeout=600) -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine
