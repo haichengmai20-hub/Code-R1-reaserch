@@ -309,28 +309,49 @@ judge: passed=True                               judge: completed=False，
 
 <a id="bc07-early-exit-2"></a>
 
-#### 完整案例 BC-07：`sys.exit(0)` 骗满分——只看退出码的判分协议（S3（发现阶段·Verifier 对抗自测） → L5（出错位置·Verifier 协议/赋分））
+#### 完整案例 BC-07：`sys.exit(0)` 骗满分——从冒烟满分答案到只看退出码的判分协议（S4（发现阶段·GPU 冒烟） → S3（发现阶段·Verifier 对抗自测） → L5（出错位置·Verifier 协议/赋分））
 
-**发现阶段 S / 出错位置 L**：发现 **S3（发现阶段·Verifier 对抗自测）**；出错 **L5（出错位置·Verifier 协议/赋分，只看退出码）**。
+**发现阶段 S / 出错位置 L**：发现 **S4（发现阶段·GPU 冒烟）**（满分答案异常 / 统计满分样本）；复现与定性 **S3（发现阶段·Verifier 对抗自测）**；出错 **L5（出错位置·Verifier 协议/赋分，只看退出码）**。
 
 **归因全链路：**
 
 ```text
-S3（发现阶段·Verifier 对抗自测）：固定候选 early_exit 交给判分器 → 原版拿 1.1
+S4（发现阶段·GPU 冒烟）：收集满分回答
    ↓
-复现：sys.exit(0) / os._exit(0) 都是 1.1；独立审计「完成的测试数」= 0
+语义复核（LLM judge，先筛）：逐条判断「这段代码是否真的解题」
+                          → 很多满分回答判「未解题」
    ↓
-报错分型：不是 NameError、不是缺库——进程正常退出（退出码 0），但没有断言结果
+看这些「满分但未解题」的代码 → 发现很多是 sys.exit(0) / os._exit(0)
    ↓
-列消费者：退出码 → 通过判定 → reward → 组内 advantage → 策略更新
+静态模式扫描：确认 exit 原语分布（sys.exit/ os._exit/ raise SystemExit/ quit(）
    ↓
-根因在 L5（出错位置·Verifier 协议/赋分）：判分把「候选代码 + 断言」拼成一个程序，只看 returncode == 0
+行为探针：重放判分，统计「实际执行的断言数 / 完成事件」→ 0
+   ↓
+聚类：满分 × 未解题 × 零断言 → reward hacking 簇
+   ↓
+S3（发现阶段·Verifier 对抗自测）：固定候选 A/B 复现——sys.exit(0) 1.1 vs 0.1
+   ↓
+根因在 L5（出错位置·Verifier 协议/赋分）：判分把「候选 + 断言」拼成一个程序，只看 returncode == 0
    ↓
 修法：受保护协议——断言拆「调用/期望」；期望不进候选进程；
       子进程逐条 nonce 上报；缺结果/缺完成事件=失败；BaseException 兜 SystemExit
    ↓
 验证：sys.exit(0) 1.1→0.1；os._exit(0) 1.1→0.1；伪造帧 0.1；正确解 7/7 零误拒
 ```
+
+**为什么不用「满分率偏高 / held-out 不涨 / 代码变短」当发现信号**：这些是**多个 bad case 的共同后果**，归因无法解耦——看到它们只能知道「有问题」，不能知道「哪条样本、哪一层」。直接统计回答内容、按 uid 汇总满分样本，才能把证据钉到具体样本上，再进三层筛查。
+
+**三层筛查（发现手法，按执行顺序）：**
+
+| 顺序 | 层 | 做什么 | 工具/方法 | 判据 |
+|---|---|---|---|---|
+| 1 | **语义（先筛）** | 判断满分回答是否真的解题 | LLM judge（输入题面+签名+约束+代码，输出 `solved / not_solved / uncertain` + 理由）+ 人工抽检 top-N | 多数判「未解题」 |
+| 2 | **静态（找共性）** | 看这些「满分但未解题」的代码长什么样 | 正则 `sys\.exit\s*\(`、`os\._exit\s*\(`、`raise\s+SystemExit`、`quit\(` | 大量命中 exit 原语 |
+| 3 | **行为（仲裁）** | 重放判分，统计实际执行的断言数 / 完成事件 | 旧判分加计数探针；现版受保护协议本身逐条上报 | **断言数=0 但 reward=1.1** |
+
+**语义先筛**是因为「满分但未解题」是最直接的可疑信号；**静态**只是找出它们的共性写法；**行为**是客观仲裁——不管代码怎么写，断言没跑就是没跑。
+
+**三层交集** = 满分 × 未解题 × 零断言 → reward hacking 簇。**固定候选（`sys.exit(0)` / `os._exit(0)`）不是发现起点，是确认手段**：先用数据把簇筛出来，再反向构造固定候选做 A/B，把机制钉到 L5。
 
 **工件链路（坏在哪）：**
 
@@ -354,9 +375,9 @@ S3（发现阶段·Verifier 对抗自测）：固定候选 early_exit 交给判�
 
 **一句话口述**：
 
-> 「我们在 S3（发现阶段·Verifier 对抗自测）时，把 `sys.exit(0)` 固定候选交给原版判分器，它拿了 1.1——因为原版把候选代码和断言拼成一个程序，只看退出码，候选第二行退出，断言一条都没跑也是 0。复现 `os._exit(0)` 同样 1.1，独立审计显示『完成的测试数』是 0。根因在 **L5（出错位置·Verifier 协议/赋分）**，不是模型、不是数据。修法是受保护协议：断言拆成调用和期望，期望根本不进候选进程，子进程逐条带 nonce 上报，缺结果或完成事件就判失败，`except BaseException` 兜住 SystemExit。修复后 `sys.exit(0)`、`os._exit(0)`、伪造通过帧全部 0.1，正确解 7/7 零误拒。」
+> 「冒烟后把满分回答拉出来，先用 LLM judge 逐条判断『这段代码到底有没有解题』——很多判『未解题』。再看这些『满分但未解题』的代码，发现很多是 `sys.exit(0)` / `os._exit(0)`。然后做静态扫描确认分布，再用行为探针重放判分：实际执行的断言数是 0，但 reward 是 1.1。三者交集就是 reward hacking 簇。然后我们才反向构造固定候选做 A/B：原版 1.1、补强版 0.1，定位到 **L5（出错位置·Verifier 协议/赋分）**——原版把候选和断言拼成一个程序，只看 returncode。修法是受保护协议：断言拆成调用和期望，期望根本不进候选进程，子进程逐条带 nonce 上报，缺结果或完成事件就判失败，`except BaseException` 兜住 SystemExit。修复后 `sys.exit(0)`、`os._exit(0)`、伪造通过帧全部 0.1，正确解 7/7 零误拒。」
 
-**证据边界**：A/B 表是 2026-10-14 在 macOS、Python 3.12、sandbox-exec 后端实测（LeetCode 53）；量化审计是 2026-11-01 的 `verify_verifier_metrics.py`；回归测试 `test_early_exit_is_now_rejected`、`test_early_exit_and_forgery_fail_under_protocol` 已入库（`test_source_supplements.py` 28 passed/3 skipped，Python 3.11 + `CODER1_PLUS_SANDBOX=local`）。**未在 Linux/firejail 训练环境实跑**。
+**证据边界**：**冒烟阶段的三层筛查（静态/行为/语义）是发现流程**——本仓未跑 GPU，这部分按 SOP 设计/推演，面试说「我们的冒烟分析流程是」，不说「我们在 GPU 上跑出了」；**A/B 表是 2026-10-14 在 macOS、Python 3.12、sandbox-exec 后端实测**（LeetCode 53）；量化审计是 2026-11-01 的 `verify_verifier_metrics.py`；回归测试 `test_early_exit_is_now_rejected`、`test_early_exit_and_forgery_fail_under_protocol` 已入库（`test_source_supplements.py` 28 passed/3 skipped，Python 3.11 + `CODER1_PLUS_SANDBOX=local`）。**未在 Linux/firejail 训练环境实跑**。
 
 **回流件**：A/B 回归测试 + 三路径量化审计已入库；可再加**冒烟 escaped 率探针**（D19）：把 `sys.exit(0)` 型作弊解放进冒烟池，escaped 率必须为 0 才能上正式训练。
 
@@ -421,6 +442,8 @@ S3（发现阶段·Verifier 对抗自测）复现：组内算例（离线、零 
 
 「轮」是判分内部的两个阶段，不是「离线一轮、在线一轮」：
 
+**契约范围（2026-11-16）**：本节 `门0→门7 + 档位` 是**函数调用契约**；stdio 用 `inputs/outputs` + stdin/stdout 管道，pytest 用 pytest runner——它们复用管理器/组内/评测，但 verifier 内部不同，且**当前未接入 plus 四档/受保护协议**。
+
 ```text
 【离线·数据构造，一次性，训练前】
   ├─ 测试用例集：题面样例 + 数值边界 + 随机（过 validate 筛选）
@@ -461,7 +484,7 @@ S3（发现阶段·Verifier 对抗自测）复现：组内算例（离线、零 
 
 **为什么不学 LeetCode 每用例一个钟。** ① 判别力重复——correctness 轮不判快慢，用例级钟的唯一用途（区分「对但慢」）已由 perf 轮专管且更准（10⁵ 规模 + 题级标定钟）；② RL 的 reward 需要「对但慢」的 0.9 中间档，LeetCode 的二值 TLE 给不了组内排序信号，快慢混进每用例二值判定会把性能瑕疵和正确性失败搅在一起；③ 诊断粒度没丢——受保护协议逐条上报，「挂在第几条」照样看得见。一句话：**LeetCode 是人交卷、判一次、verdict 给人看；我们每步 16 份卷、判几万次、reward 喂优化器——拆两轮、分档输出，钟只配在判快慢的那一轮。** 超出题面约束的输入按 D21 用例级隔离（`beyond_contract`，不参与计分）。完整无损版见[讨论结论库第 11 条](讨论结论库.md#lib-two-rounds-cost)。
 
-**这条路在数据侧会踩的第一个坑：长度上界上标丢失。** 扩容解析和 verifier 解析会把 `10⁵` 统一读成 `105`：correctness 随机扩容 106~1000 被 validate 按用例级拦掉，perf 因标定 105<1000 整题跳过——全链路停在 105，`10⁵` 从未出现。完整推演、三层口径与证据边界见 [01 的 BC-25 案例](01_数据理解与GT构建.md#bc25-superscript-1)；它也说明**validate 门读约束，correctness/perf 打分不读**。
+**这条路在数据侧会踩的第一个坑：长度上界上标丢失。** 扩容解析和 verifier 解析会把 `10⁵` 统一读成 `105`：correctness 随机扩容 106~1000 被 validate 按用例级拦掉；perf 标定入口读到 105<1000 → 返回 `no_size_bound`、**不生成/下发该题 perf 用例**（题仍可参与 correctness，不必然恒 0.1）。完整推演、三层口径与证据边界见 [01 的 BC-25 案例](01_数据理解与GT构建.md#bc25-superscript-1)；它也说明**validate 门读约束，correctness/perf 打分不读**。
 
 **判分粒度的三种「不罚」——单位不同，不能混用：**
 
